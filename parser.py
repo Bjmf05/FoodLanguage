@@ -1,4 +1,5 @@
 from lexer import Lexer
+
 class CulinaryParser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -101,31 +102,33 @@ class CulinaryParser:
 
     def parse_parameters(self):
         parameters = []
-        if (self.current_token.type != 'DELIMETER' or 
-            self.current_token.value != ')'):
-            while True:
-                # Tipo del parámetro
-                if self.current_token.type in ['INT', 'FLOAT', 'STRING', 'LIST']:
-                    param_type = self.current_token.value
-                    self.advance()
-                else:
-                    raise SyntaxError(f"Se esperaba tipo de parámetro, se encontró {self.current_token}")
-                
-                # Nombre del parámetro
-                if self.current_token.type == 'IDENTIFIER':
-                    param_name = self.current_token.value
-                    self.advance()
-                    parameters.append((param_type, param_name))
-                else:
-                    raise SyntaxError(f"Se esperaba nombre de parámetro, se encontró {self.current_token}")
-                
-                if (self.current_token.type == 'DELIMETER' and 
-                    self.current_token.value == ')'):
-                    break
-                elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
-                    self.advance()
-                else:
-                    raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
+        # si el siguiente token es ')' no hay parámetros
+        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
+            return parameters
+
+        while True:
+            # Tipo del parámetro
+            if self.current_token.type in ['INT', 'FLOAT', 'STRING', 'LIST']:
+                param_type = self.current_token.value
+                self.advance()
+            else:
+                raise SyntaxError(f"Se esperaba tipo de parámetro, se encontró {self.current_token}")
+            
+            # Nombre del parámetro
+            if self.current_token.type == 'IDENTIFIER':
+                param_name = self.current_token.value
+                self.advance()
+                parameters.append((param_type, param_name))
+            else:
+                raise SyntaxError(f"Se esperaba nombre de parámetro, se encontró {self.current_token}")
+            
+            if (self.current_token.type == 'DELIMETER' and 
+                self.current_token.value == ')'):
+                break
+            elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
+                self.advance()
+            else:
+                raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
         return parameters
 
     def parse_recipe_body(self):
@@ -179,9 +182,6 @@ class CulinaryParser:
         elif (self.current_token.type == 'CONTINUE' and 
               self.current_token.value.lower() == 'keep_stirring'):
             return self.parse_continue()
-        elif self.current_token.type == 'IDENTIFIER':
-            expr = self.parse_expression()
-            return ('expression', expr)
         else:
             raise SyntaxError(f"Declaración inesperada: {self.current_token}")
 
@@ -207,16 +207,17 @@ class CulinaryParser:
         identifier = self.current_token.value
         self.advance()
         
-        if (self.current_token.type == 'ASSIGN' and 
+        if (self.current_token and self.current_token.type == 'ASSIGN' and 
             self.current_token.value == '=='):
             return self.parse_assignment(identifier)
-        elif self.current_token.type == 'DELIMETER' and self.current_token.value == '(':
+        elif self.current_token and self.current_token.type == 'DELIMETER' and self.current_token.value == '(':
             return self.parse_function_call(identifier)
-        elif (self.current_token.type in ['PLUS', 'MINUS'] and
+        elif (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
               self.current_token.value in ['++', '--']):
             operator = self.current_token.value
             self.advance()
             
+            # caso: x++ (postfix) o x++ <number> (extra)
             if self.current_token and self.current_token.type == 'NUMBER':
                 right = self.parse_primary()
                 return ('binary_op', ('variable', identifier), operator, right)
@@ -238,20 +239,22 @@ class CulinaryParser:
 
     def parse_arguments(self):
         arguments = []
-        if (self.current_token.type != 'DELIMETER' or 
-            self.current_token.value != ')'):
-            while True:
-                arg = self.parse_expression()
-                if arg is None:
-                    arguments.append(arg)
-                
-                if (self.current_token.type == 'DELIMETER' and 
-                    self.current_token.value == ')'):
-                    break
-                elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
-                    self.advance()
-                else:
-                    raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
+        # si inmediato hay ')', no hay argumentos
+        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
+            return arguments
+
+        while True:
+            arg = self.parse_expression()
+            # añadir aunque arg sea None (si permite expresiones vacías), pero normalmente arg no debe ser None
+            arguments.append(arg)
+            
+            if (self.current_token.type == 'DELIMETER' and 
+                self.current_token.value == ')'):
+                break
+            elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
+                self.advance()
+            else:
+                raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
         return arguments
 
     def parse_expression(self):      
@@ -259,72 +262,53 @@ class CulinaryParser:
     
     def parse_logical_or(self):
         left = self.parse_logical_and()
-        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
-            return None
         while (self.current_token and 
-               self.current_token.type == 'OR' and
-               self.current_token.value.lower() == 'fork'):
+               self.current_token.type == 'OR'):
             operator = self.current_token.value
             self.advance()
             right = self.parse_logical_and()
             left = ('logical_or', left, operator, right)
-        
         return left
     
     def parse_logical_and(self):
         left = self.parse_comparison()
-        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
-            return None        
         while (self.current_token and 
-               self.current_token.type == 'AND' and
-               self.current_token.value.lower() == 'spoon'):
+               self.current_token.type == 'AND'):
             operator = self.current_token.value
             self.advance()
             right = self.parse_comparison()
             left = ('logical_and', left, operator, right)
-        
         return left
     
     def parse_comparison(self):
         left = self.parse_term()
-        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
-            return None        
         while (self.current_token and 
                self.current_token.type in ['GREATER', 'LESS', 'GREATER_EQUAL', 'LESS_EQUAL', 'EQUAL','NOT_EQUAL']):
             operator = self.current_token.value
             self.advance()
             right = self.parse_term()
             left = ('comparison', left, operator, right)
-        
         return left
     
 
     def parse_term(self):
         left = self.parse_factor()
-        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
-            return None        
         while (self.current_token and 
-               self.current_token.type in ['PLUS', 'MINUS'] and
-               self.current_token.value in ['++', '--']):
-  
+               self.current_token.type in ['PLUS', 'MINUS']):
             operator = self.current_token.value
             self.advance()
             right = self.parse_factor()
             left = ('binary_op', left, operator, right)
-        
         return left
     
     def parse_factor(self):
         left = self.parse_unary()
-        if self.current_token.type == 'DELIMETER' and self.current_token.value == ')':
-            return None        
         while (self.current_token and 
                self.current_token.type in ['MULTIPLY', 'DIVIDE']):
             operator = self.current_token.value
             self.advance()
             right = self.parse_unary()
             left = ('binary_op', left, operator, right)
-        
         return left
     
     def parse_inc_dec(self):
@@ -344,28 +328,28 @@ class CulinaryParser:
 
     def parse_primary(self):
 
-        if (self.current_token.type in ['PLUS', 'MINUS'] and
+        if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
             self.current_token.value in ['++', '--']):
             operator = self.current_token.value
             self.advance()
         
-            if self.current_token.type == 'IDENTIFIER':
+            if self.current_token and self.current_token.type == 'IDENTIFIER':
                 identifier = self.current_token.value
                 self.advance()
                 return ('inc_dec_prefix', operator, identifier)
             else:
                 raise SyntaxError(f"Se esperaba identificador después de {operator}")
             
-        elif self.current_token.type == 'IDENTIFIER':
+        elif self.current_token and self.current_token.type == 'IDENTIFIER':
             value = self.current_token.value
             self.advance()
             
-            if (self.current_token.type == 'DELIMETER' and 
+            if (self.current_token and self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == '('):
                 return self.parse_function_call(value)
             return ('variable', value)
         
-        elif self.current_token.type == 'NUMBER':
+        elif self.current_token and self.current_token.type == 'NUMBER':
             if '.' in self.current_token.value:
                 value = float(self.current_token.value)
             else:
@@ -373,29 +357,29 @@ class CulinaryParser:
             self.advance()
             return ('number', value)
         
-        elif self.current_token.type == 'STRING_LITERAL':
+        elif self.current_token and self.current_token.type == 'STRING_LITERAL':
             value = self.current_token.value.strip('"')
             self.advance()
             return ('string', value)
         
-        elif self.current_token.type == 'CHAR':
+        elif self.current_token and self.current_token.type == 'CHAR':
             value = self.current_token.value.strip("'")
             self.advance()
             return ('char', value)
         
-        elif self.current_token.type == 'TRUE':
+        elif self.current_token and self.current_token.type == 'TRUE':
             self.advance()
             return ('boolean', True)
         
-        elif self.current_token.type == 'FALSE':
+        elif self.current_token and self.current_token.type == 'FALSE':
             self.advance()
             return ('boolean', False)
         
-        elif self.current_token.type == 'NULL':
+        elif self.current_token and self.current_token.type == 'NULL':
             self.advance()
             return ('null', None)
         
-        elif(self.current_token.type in ['PLUS', 'MINUS'] and
+        elif self.current_token and (self.current_token.type in ['PLUS', 'MINUS'] and
              self.current_token.value in ['++', '--']):
             return self.parse_inc_dec()
         
@@ -427,7 +411,7 @@ class CulinaryParser:
             raise SyntaxError(f"Se esperaba nombre de variable para input, se encontró {self.current_token}")
 
     def parse_if(self):
-        self.advance()  # Consume 'if' or 'if_has'
+        self.advance()  # Consume 'if' o 'if_has'
         self.expect('DELIMETER', '(')
         condition = self.parse_expression()
         self.expect('DELIMETER', ')')
@@ -515,7 +499,6 @@ class CulinaryParser:
     def parse_continue(self):
         self.expect('CONTINUE', 'keep_stirring')
         return ('continue',)
-
 # Ejemplo de uso
 
 if __name__ == '__main__':
