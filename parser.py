@@ -347,6 +347,18 @@ class CulinaryParser:
             if (self.current_token and self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == '('):
                 return self.parse_function_call(value)
+            
+            if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
+                self.current_token.value in ['++', '--']):
+                operator = self.current_token.value
+                self.advance()
+                
+                # caso: x++ (postfix) o x++ <number> (extra)
+                if self.current_token and self.current_token.type == 'NUMBER':
+                    right = self.parse_primary()
+                    return ('binary_op', ('variable', value), operator, right)
+                else:
+                    return ('inc_dec_postfix', value, operator)
             return ('variable', value)
         
         elif self.current_token and self.current_token.type == 'NUMBER':
@@ -533,6 +545,16 @@ if __name__ == '__main__':
         """
         stir (quantity i == 0, i < 10, i++ ) {
             taste(i)
+        }
+        """,
+        # Prueba de booleanos
+        """
+        recipe pruebaBooleanos() {
+            readyVar == ready
+            rawVar == raw
+            taste(readyVar)
+            taste(rawVar)
+            serve readyVar
         }
         """
     ]
