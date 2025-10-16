@@ -8,6 +8,9 @@ token_patterns = [
     ('WHILE', r'(?i)\b(cook_while)\b'),              # while
     ('IF', r'(?i)\b(if|if_has)\b'),                  # if
     ('ELSE', r'(?i)\b(otherwise)\b'),                # else
+    ('SWITCH', r'(?i)\b(season)\b'),                 # switch
+    ('CASE', r'(?i)\b(with)\b'),                     # case
+    ('DEFAULT', r'(?i)\b(default_flavor)\b'),        # default
     ('INPUT', r'(?i)\b(add)\b'),                     # input
     ('TRUE', r'(?i)\b(ready)\b'),                    # true
     ('FALSE', r'(?i)\b(raw)\b'),                     # false

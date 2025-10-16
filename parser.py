@@ -53,6 +53,9 @@ class CulinaryParser:
             elif (self.current_token.type == 'FOR' and 
                   self.current_token.value.lower() == 'stir'):
                 self.tree.append(self.parse_for())
+            elif (self.current_token.type == 'SWITCH' and 
+                  self.current_token.value.lower() == 'season'):
+                self.tree.append(self.parse_switch())
             elif self.current_token.type in ['INT', 'FLOAT', 'STRING', 'LIST']:
                 self.tree.append(self.parse_var_declaration())
             elif self.current_token.type == 'IDENTIFIER':
@@ -164,6 +167,9 @@ class CulinaryParser:
         elif (self.current_token.type == 'FOR' and 
               self.current_token.value.lower() == 'stir'):
             return self.parse_for()
+        elif (self.current_token.type == 'SWITCH' and 
+              self.current_token.value.lower() == 'season'):
+            return self.parse_switch()
         elif self.current_token.type in ['INT', 'FLOAT', 'STRING', 'LIST']:
             return self.parse_var_declaration()
         elif self.current_token.type == 'IDENTIFIER':
@@ -560,6 +566,65 @@ class CulinaryParser:
         self.expect('DELIMETER', '}')
         
         return ('for', var_type, var_name, start_value, condition, increment, for_body)
+    
+    def parse_switch(self):
+        """Parsea una estructura switch: season (expr) { with valor: ... default_flavor: ... }"""
+        self.expect('SWITCH', 'season')
+        self.expect('DELIMETER', '(')
+        
+        # Expresión a evaluar
+        switch_expr = self.parse_expression()
+        
+        self.expect('DELIMETER', ')')
+        self.expect('DELIMETER', '{')
+        
+        cases = []
+        default_case = None
+        
+        # Parsear casos
+        while self.current_token and not (self.current_token.type == 'DELIMETER' and 
+                                          self.current_token.value == '}'):
+            if self.current_token.type == 'CASE' and self.current_token.value.lower() == 'with':
+                self.advance()
+                
+                # Valor del caso
+                case_value = self.parse_expression()
+                
+                self.expect('DELIMETER', ':')
+                
+                # Cuerpo del caso (statements hasta encontrar 'with', 'default_flavor' o '}')
+                case_body = []
+                while self.current_token and not (
+                    (self.current_token.type == 'CASE' and self.current_token.value.lower() == 'with') or
+                    (self.current_token.type == 'DEFAULT' and self.current_token.value.lower() == 'default_flavor') or
+                    (self.current_token.type == 'DELIMETER' and self.current_token.value == '}')
+                ):
+                    statement = self.parse_statement()
+                    if statement:
+                        case_body.append(statement)
+                
+                cases.append((case_value, case_body))
+            
+            elif self.current_token.type == 'DEFAULT' and self.current_token.value.lower() == 'default_flavor':
+                self.advance()
+                self.expect('DELIMETER', ':')
+                
+                # Cuerpo del caso default
+                default_body = []
+                while self.current_token and not (
+                    self.current_token.type == 'DELIMETER' and self.current_token.value == '}'
+                ):
+                    statement = self.parse_statement()
+                    if statement:
+                        default_body.append(statement)
+                
+                default_case = default_body
+            else:
+                raise SyntaxError(f"Se esperaba 'with' o 'default_flavor' en switch, se encontró {self.current_token}")
+        
+        self.expect('DELIMETER', '}')
+        
+        return ('switch', switch_expr, cases, default_case)
 
     def parse_return(self):
         self.expect('RETURN', 'serve')
@@ -713,6 +778,22 @@ if __name__ == '__main__':
             
             taste("Nueva suma: ", mat[0][0] ++ mat[1][1])
             serve mat
+        }
+        """,
+        # Prueba de switch (season)
+        """
+        quantity opcion == 2
+        
+        season (opcion) {
+            with 1:
+                taste("Opción uno")
+            with 2:
+                taste("Opción dos")
+                quantity valor == 10
+            with 3:
+                taste("Opción tres")
+            default_flavor:
+                taste("Opción por defecto")
         }
         """
     ]

@@ -67,6 +67,8 @@ class CulinaryInterpreter:
             return self.eval_while(node)
         elif node_type == 'for':
             return self.eval_for(node)
+        elif node_type == 'switch':
+            return self.eval_switch(node)
         elif node_type == 'function_call':
             return self.eval_function_call(node)
         elif node_type == 'return':
@@ -271,6 +273,55 @@ class CulinaryInterpreter:
                 self.eval_node(increment)
             else:
                 self.eval_expression(increment)
+        
+        return None
+    
+    def eval_switch(self, node):
+        """Evalúa una estructura switch (season)"""
+        _, switch_expr, cases, default_case = node
+        
+        # Evaluar la expresión del switch
+        switch_value = self.eval_expression(switch_expr)
+        
+        # Buscar caso coincidente
+        case_matched = False
+        for case_value, case_body in cases:
+            evaluated_case = self.eval_expression(case_value)
+            
+            if switch_value == evaluated_case:
+                case_matched = True
+                # Ejecutar cuerpo del caso
+                for statement in case_body:
+                    self.eval_node(statement)
+                    
+                    if self.return_value is not None:
+                        return None
+                    
+                    if self.break_flag:
+                        self.break_flag = False
+                        return None
+                    
+                    if self.continue_flag:
+                        return None
+                
+                # En FoodLanguage, por defecto hay break implícito
+                # (no hay fall-through como en C)
+                break
+        
+        # Si no coincidió ningún caso, ejecutar default
+        if not case_matched and default_case is not None:
+            for statement in default_case:
+                self.eval_node(statement)
+                
+                if self.return_value is not None:
+                    return None
+                
+                if self.break_flag:
+                    self.break_flag = False
+                    return None
+                
+                if self.continue_flag:
+                    return None
         
         return None
     
@@ -643,3 +694,41 @@ if __name__ == '__main__':
     
     print("\n=== Ejemplo 8: Factorial recursivo ===")
     run_food_language(code8)
+    
+    # Ejemplo 9: Switch (season)
+    code9 = """
+    quantity dia == 3
+    
+    season (dia) {
+        with 1:
+            taste("Lunes - Día de preparación")
+        with 2:
+            taste("Martes - Día de cocción")
+        with 3:
+            taste("Miércoles - Día de horneado")
+        with 4:
+            taste("Jueves - Día de fritura")
+        with 5:
+            taste("Viernes - Día de parrilla")
+        default_flavor:
+            taste("Fin de semana - Descanso")
+    }
+    
+    ingredient opcion == "B"
+    
+    season (opcion) {
+        with "A":
+            taste("Seleccionaste: Aperitivo")
+        with "B":
+            taste("Seleccionaste: Plato principal")
+            quantity precio == 15
+            taste("Precio:", precio)
+        with "C":
+            taste("Seleccionaste: Postre")
+        default_flavor:
+            taste("Opción no válida")
+    }
+    """
+    
+    print("\n=== Ejemplo 9: Switch (season) ===")
+    run_food_language(code9)
