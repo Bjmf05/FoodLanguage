@@ -30,12 +30,8 @@ class CulinaryParser:
             raise SyntaxError(f"Se esperaba {token_type}, pero se encontró {self.current_token}")
 
     def parse(self):
-        counter = 1
         self.tree = []
         while self.current_token is not None:
-            print('Iteración del ciclo numero', counter)
-            print('El current token que viene es ', self.current_token.type, self.current_token.value)
-            
             if (self.current_token.type == 'FUNCTION' and 
                 self.current_token.value.lower() == 'recipe'):
                 self.tree.append(self.parse_recipe())
@@ -72,7 +68,6 @@ class CulinaryParser:
                 self.tree.append(self.parse_continue())
             else:
                 raise SyntaxError(f"Token inesperado {self.current_token.type}:{self.current_token.value}")
-            counter += 1
         return self.tree
 
     def parse_recipe(self):
@@ -404,17 +399,9 @@ class CulinaryParser:
                 self.current_token.value == '('):
                 return self.parse_function_call(value)
             
-            if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
-                self.current_token.value in ['++', '--']):
-                operator = self.current_token.value
-                self.advance()
-                
-                # caso: x++ (postfix) o x++ <number> (extra)
-                if self.current_token and self.current_token.type == 'NUMBER':
-                    right = self.parse_primary()
-                    return ('binary_op', ('variable', value), operator, right)
-                else:
-                    return ('inc_dec_postfix', value, operator)
+            # NO manejar postfix aquí - eso causa ambigüedad con operadores binarios
+            # El postfix se maneja en parse_assignment_or_call() cuando es un statement
+            
             return ('variable', value)
         
         elif self.current_token and self.current_token.type == 'NUMBER':
@@ -548,8 +535,24 @@ class CulinaryParser:
         condition = self.parse_expression()
         self.expect('DELIMETER', ',')
         
-        # Parse increment
-        increment = self.parse_expression()
+        # Parse increment - puede ser una expresión o una asignación
+        if self.current_token.type == 'IDENTIFIER':
+            inc_var = self.current_token.value
+            self.advance()
+            
+            # Verificar si es una asignación (var == expr) o solo una expresión
+            if self.current_token.type == 'ASSIGN' and self.current_token.value == '==':
+                self.advance()
+                inc_value = self.parse_expression()
+                increment = ('assignment', inc_var, inc_value)
+            else:
+                # Retroceder y parsear como expresión
+                self.pos -= 1
+                self.current_token = self.tokens[self.pos] if self.pos < len(self.tokens) else None
+                increment = self.parse_expression()
+        else:
+            increment = self.parse_expression()
+        
         self.expect('DELIMETER', ')')
         self.expect('DELIMETER', '{')
         
@@ -636,7 +639,7 @@ if __name__ == '__main__':
         """,
         # Prueba de for
         """
-        stir (quantity i == 0, i < 10, i++ ) {
+        stir (quantity i == 0, i < 10, i == i ++ 1) {
             taste(i)
         }
         """,
