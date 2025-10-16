@@ -207,7 +207,24 @@ class CulinaryParser:
         identifier = self.current_token.value
         self.advance()
         
-        if (self.current_token and self.current_token.type == 'ASSIGN' and 
+        # Acceso a índice de lista: identifier[index]
+        if (self.current_token and self.current_token.type == 'DELIMETER' and 
+            self.current_token.value == '['):
+            self.advance()
+            index = self.parse_expression()
+            self.expect('DELIMETER', ']')
+            
+            # Asignación a elemento de lista: identifier[index] == value
+            if (self.current_token and self.current_token.type == 'ASSIGN' and 
+                self.current_token.value == '=='):
+                self.advance()
+                value = self.parse_expression()
+                return ('list_assignment', identifier, index, value)
+            else:
+                # Solo acceso a elemento: identifier[index]
+                return ('list_access', identifier, index)
+        
+        elif (self.current_token and self.current_token.type == 'ASSIGN' and 
             self.current_token.value == '=='):
             return self.parse_assignment(identifier)
         elif self.current_token and self.current_token.type == 'DELIMETER' and self.current_token.value == '(':
@@ -224,7 +241,7 @@ class CulinaryParser:
             else:
                 return ('inc_dec_postfix', identifier, operator)
         else:
-            raise SyntaxError(f"Se esperaba '==', '(', '++' o '--', se encontró {self.current_token}")
+            raise SyntaxError(f"Se esperaba '==', '(', '[', '++' o '--', se encontró {self.current_token}")
 
     def parse_assignment(self, var_name):
         self.expect('ASSIGN', '==')
@@ -339,10 +356,23 @@ class CulinaryParser:
                 return ('inc_dec_prefix', operator, identifier)
             else:
                 raise SyntaxError(f"Se esperaba identificador después de {operator}")
+        
+        # Literal de lista: [1, 2, 3]
+        elif (self.current_token and self.current_token.type == 'DELIMETER' and 
+              self.current_token.value == '['):
+            return self.parse_list_literal()
             
         elif self.current_token and self.current_token.type == 'IDENTIFIER':
             value = self.current_token.value
             self.advance()
+            
+            # Acceso a índice de lista: identifier[index]
+            if (self.current_token and self.current_token.type == 'DELIMETER' and 
+                self.current_token.value == '['):
+                self.advance()
+                index = self.parse_expression()
+                self.expect('DELIMETER', ']')
+                return ('list_access', value, index)
             
             if (self.current_token and self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == '('):
@@ -390,6 +420,14 @@ class CulinaryParser:
         elif self.current_token and self.current_token.type == 'NULL':
             self.advance()
             return ('null', None)
+        
+        # Expresión entre paréntesis
+        elif (self.current_token and self.current_token.type == 'DELIMETER' and 
+              self.current_token.value == '('):
+            self.advance()
+            expr = self.parse_expression()
+            self.expect('DELIMETER', ')')
+            return expr
         
         elif self.current_token and (self.current_token.type in ['PLUS', 'MINUS'] and
              self.current_token.value in ['++', '--']):
@@ -511,6 +549,35 @@ class CulinaryParser:
     def parse_continue(self):
         self.expect('CONTINUE', 'keep_stirring')
         return ('continue',)
+    
+    def parse_list_literal(self):
+        """Parse una lista literal: [elem1, elem2, ...]"""
+        self.expect('DELIMETER', '[')
+        elements = []
+        
+        # Lista vacía
+        if (self.current_token and self.current_token.type == 'DELIMETER' and 
+            self.current_token.value == ']'):
+            self.advance()
+            return ('list', elements)
+        
+        # Lista con elementos
+        while True:
+            element = self.parse_expression()
+            elements.append(element)
+            
+            if (self.current_token and self.current_token.type == 'DELIMETER' and 
+                self.current_token.value == ']'):
+                self.advance()
+                break
+            elif (self.current_token and self.current_token.type == 'DELIMETER' and 
+                  self.current_token.value == ','):
+                self.advance()
+            else:
+                raise SyntaxError(f"Se esperaba ',' o ']' en lista, se encontró {self.current_token}")
+        
+        return ('list', elements)
+
 # Ejemplo de uso
 
 if __name__ == '__main__':
@@ -555,6 +622,33 @@ if __name__ == '__main__':
             taste(readyVar)
             taste(rawVar)
             serve readyVar
+        }
+        """,
+        # Prueba de listas (menu)
+        """
+        recipe pruebaListas() {
+            menu miMenu == [1, 2, 3, 4, 5]
+            taste("Lista completa: ", miMenu)
+            quantity primerElemento == miMenu[0]
+            taste("Primer elemento: ", primerElemento)
+            miMenu[1] == 10
+            taste("Segundo elemento modificado: ", miMenu[1])
+            menu listaVacia == []
+            menu listaStrings == ["pizza", "pasta", "ensalada"]
+            serve miMenu
+        }
+        """,
+        # Prueba de lista con expresiones
+        """
+        recipe pruebaListaExpresiones() {
+            quantity x == 5
+            quantity y == 10
+            menu numeros == [x, y, x ** 2, 100]
+            taste(numeros[0])
+            taste(numeros[2])
+            quantity suma == numeros[0] ++ numeros[1]
+            taste("Suma: ", suma)
+            serve numeros
         }
         """
     ]
