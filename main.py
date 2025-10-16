@@ -286,6 +286,7 @@ class FoodLanguageIDE:
 📌 OPERADORES LÓGICOS:
    • spoon         → AND (&&)
    • fork          → OR (||)
+   • unseasoned    → NOT (!)
 
 📌 OPERADORES ARITMÉTICOS:
    • ++            → Suma
@@ -519,7 +520,7 @@ class FoodLanguageIDE:
         content = """
 ╔════════════════════════════════════════════════════════════╗
 ║          OPERADORES LÓGICOS - FOODLANGUAGE                 ║
-╚════════════════════════════════════════════════════════════╝
+╚════════════════════════════════════════════════════════════════╝
 
 🥄 SPOON (AND - &&):
    Ambas condiciones deben ser verdaderas.
@@ -537,7 +538,19 @@ class FoodLanguageIDE:
        taste("Puede descansar")
    }
 
-📊 TABLA DE VERDAD SPOON (AND):
+� UNSEASONED (NOT - !):
+   Invierte el valor de verdad de una condición.
+   
+   Ejemplo:
+   if_has (unseasoned estaLloviendo) {
+       taste("Hace buen tiempo")
+   }
+   
+   if_has (edad >= 18 spoon unseasoned tieneLicencia) {
+       taste("Mayor de edad pero sin licencia")
+   }
+
+�📊 TABLA DE VERDAD SPOON (AND):
    ready spoon ready   → ready
    ready spoon raw     → raw
    raw spoon ready     → raw
@@ -549,8 +562,13 @@ class FoodLanguageIDE:
    raw fork ready      → ready
    raw fork raw        → raw
 
-💡 TIP: Use paréntesis para operaciones complejas:
-   if_has ((a > 5 spoon b < 10) fork c === ready) { }
+� TABLA DE VERDAD UNSEASONED (NOT):
+   unseasoned ready    → raw
+   unseasoned raw      → ready
+
+�💡 TIP: Use paréntesis para operaciones complejas:
+   if_has ((a > 5 spoon b < 10) fork unseasoned c) { }
+   if_has (unseasoned (x < 0 fork x > 100)) { }
 """
         text.insert(1.0, content)
         text.config(state=tk.DISABLED)

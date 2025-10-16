@@ -22,6 +22,7 @@ token_patterns = [
     ('BREAK', r'(?i)\b(stop_stirring)\b'),           # break
     ('CONTINUE', r'(?i)\b(keep_stirring)\b'),        # continue
     # Operadores lógicos
+    ('NOT', r'(?i)\b(unseasoned)\b'),                # not
     ('AND', r'(?i)\b(spoon)\b'),                     # and
     ('OR', r'(?i)\b(fork)\b'),                       # or
     # Operadores aritméticos y de comparación

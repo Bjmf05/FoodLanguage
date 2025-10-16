@@ -359,6 +359,12 @@ class CulinaryParser:
                 raise SyntaxError(f"Se esperaba nombre de variable para incremento/decremento, se encontró {self.current_token}")
 
     def parse_unary(self):
+        # Manejar operador NOT (unseasoned)
+        if (self.current_token and self.current_token.type == 'NOT' and
+            self.current_token.value.lower() == 'unseasoned'):
+            self.advance()
+            operand = self.parse_unary()  # Permitir NOT anidados
+            return ('logical_not', operand)
         return self.parse_primary()
 
     def parse_primary(self):

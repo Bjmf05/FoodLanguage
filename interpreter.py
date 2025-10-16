@@ -406,6 +406,8 @@ class CulinaryInterpreter:
             return self.eval_logical_and(node)
         elif node_type == 'logical_or':
             return self.eval_logical_or(node)
+        elif node_type == 'logical_not':
+            return self.eval_logical_not(node)
         elif node_type == 'inc_dec_prefix':
             return self.eval_inc_dec_prefix(node)
         elif node_type == 'inc_dec_postfix':
@@ -521,6 +523,13 @@ class CulinaryInterpreter:
         
         right_val = self.eval_expression(right)
         return bool(left_val or right_val)
+    
+    def eval_logical_not(self, node):
+        """Evalúa operador lógico NOT (unseasoned)"""
+        _, operand = node
+        
+        operand_val = self.eval_expression(operand)
+        return not bool(operand_val)
     
     def eval_inc_dec_prefix(self, node):
         """Evalúa incremento/decremento prefijo (++x, --x)"""
