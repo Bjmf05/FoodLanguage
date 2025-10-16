@@ -1,10 +1,11 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, messagebox, filedialog
 from lexer import Lexer
 from parser import CulinaryParser
 from interpreter import CulinaryInterpreter
 import io
 import sys
+import os
 
 class FoodLanguageIDE:
     def __init__(self, root):
@@ -19,10 +20,24 @@ class FoodLanguageIDE:
         # Variables
         self.current_code = ""
         self.ast = None
+        self.current_file = None  # Ruta del archivo actual
+        self.file_modified = False  # Indica si hay cambios sin guardar
         
         # Crear interfaz
         self.create_menu()
         self.create_main_layout()
+        
+        # Vincular evento de modificación de texto
+        self.code_text.bind('<<Modified>>', self.on_text_modified)
+        
+        # Atajos de teclado
+        self.root.bind('<Control-n>', lambda e: self.new_file())
+        self.root.bind('<Control-o>', lambda e: self.open_file())
+        self.root.bind('<Control-s>', lambda e: self.save_file())
+        self.root.bind('<Control-Shift-S>', lambda e: self.save_file_as())
+        
+        # Protocolo de cierre
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
     def setup_style(self):
         """Configurar estilo visual de la aplicación"""
@@ -50,10 +65,14 @@ class FoodLanguageIDE:
         # Menú Archivo
         file_menu = tk.Menu(menubar, tearoff=0, bg='#3c3c3c', fg='#e0e0e0')
         menubar.add_cascade(label="Archivo", menu=file_menu)
-        file_menu.add_command(label="Nuevo", command=self.new_file)
+        file_menu.add_command(label="Nuevo", command=self.new_file, accelerator="Ctrl+N")
+        file_menu.add_command(label="Abrir...", command=self.open_file, accelerator="Ctrl+O")
+        file_menu.add_command(label="Guardar", command=self.save_file, accelerator="Ctrl+S")
+        file_menu.add_command(label="Guardar como...", command=self.save_file_as, accelerator="Ctrl+Shift+S")
+        file_menu.add_separator()
         file_menu.add_command(label="Limpiar", command=self.clear_code)
         file_menu.add_separator()
-        file_menu.add_command(label="Salir", command=self.root.quit)
+        file_menu.add_command(label="Salir", command=self.on_closing)
         
         # Menú Palabras Reservadas
         keywords_menu = tk.Menu(menubar, tearoff=0, bg='#3c3c3c', fg='#e0e0e0')
@@ -224,8 +243,129 @@ class FoodLanguageIDE:
     
     def new_file(self):
         """Crear nuevo archivo"""
-        if messagebox.askyesno("Nuevo archivo", "¿Limpiar el código actual?"):
-            self.clear_code()
+        if self.file_modified:
+            response = messagebox.askyesnocancel(
+                "Archivo sin guardar",
+                "¿Deseas guardar los cambios antes de crear un nuevo archivo?"
+            )
+            if response is None:  # Cancelar
+                return
+            elif response:  # Sí
+                self.save_file()
+        
+        self.code_text.delete(1.0, tk.END)
+        self.current_file = None
+        self.file_modified = False
+        self.update_title()
+        self.clear_output()
+    
+    def open_file(self):
+        """Abrir un archivo existente"""
+        if self.file_modified:
+            response = messagebox.askyesnocancel(
+                "Archivo sin guardar",
+                "¿Deseas guardar los cambios antes de abrir otro archivo?"
+            )
+            if response is None:  # Cancelar
+                return
+            elif response:  # Sí
+                self.save_file()
+        
+        file_path = filedialog.askopenfilename(
+            title="Abrir archivo",
+            filetypes=[
+                ("FoodLanguage Files", "*.food"),
+                ("Text Files", "*.txt"),
+                ("All Files", "*.*")
+            ],
+            defaultextension=".food"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    self.code_text.delete(1.0, tk.END)
+                    self.code_text.insert(1.0, content)
+                    self.current_file = file_path
+                    self.file_modified = False
+                    self.update_title()
+                    self.write_output(f"✓ Archivo abierto: {os.path.basename(file_path)}", 'success')
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el archivo:\n{str(e)}")
+    
+    def save_file(self):
+        """Guardar el archivo actual"""
+        if self.current_file:
+            try:
+                content = self.code_text.get(1.0, tk.END)
+                with open(self.current_file, 'w', encoding='utf-8') as file:
+                    file.write(content)
+                self.file_modified = False
+                self.update_title()
+                self.write_output(f"✓ Archivo guardado: {os.path.basename(self.current_file)}", 'success')
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")
+        else:
+            self.save_file_as()
+    
+    def save_file_as(self):
+        """Guardar el archivo con un nuevo nombre"""
+        file_path = filedialog.asksaveasfilename(
+            title="Guardar archivo como",
+            filetypes=[
+                ("FoodLanguage Files", "*.food"),
+                ("Text Files", "*.txt"),
+                ("All Files", "*.*")
+            ],
+            defaultextension=".food"
+        )
+        
+        if file_path:
+            try:
+                content = self.code_text.get(1.0, tk.END)
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    file.write(content)
+                self.current_file = file_path
+                self.file_modified = False
+                self.update_title()
+                self.write_output(f"✓ Archivo guardado como: {os.path.basename(file_path)}", 'success')
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")
+    
+    def on_text_modified(self, event=None):
+        """Evento cuando el texto es modificado"""
+        if self.code_text.edit_modified():
+            self.file_modified = True
+            self.update_title()
+            self.code_text.edit_modified(False)
+    
+    def update_title(self):
+        """Actualizar el título de la ventana"""
+        title = "FoodLanguage IDE"
+        if self.current_file:
+            title += f" - {os.path.basename(self.current_file)}"
+        else:
+            title += " - Nuevo archivo"
+        
+        if self.file_modified:
+            title += " *"
+        
+        self.root.title(title)
+    
+    def on_closing(self):
+        """Manejar el evento de cierre de la ventana"""
+        if self.file_modified:
+            response = messagebox.askyesnocancel(
+                "Archivo sin guardar",
+                "¿Deseas guardar los cambios antes de salir?"
+            )
+            if response is None:  # Cancelar
+                return
+            elif response:  # Sí
+                self.save_file()
+        
+        self.root.destroy()
             
     def clear_code(self):
         """Limpiar el editor de código"""
