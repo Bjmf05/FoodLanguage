@@ -207,22 +207,39 @@ class CulinaryParser:
         identifier = self.current_token.value
         self.advance()
         
-        # Acceso a índice de lista: identifier[index]
+        # Acceso a índice de lista o matriz: identifier[index] o identifier[i][j]
         if (self.current_token and self.current_token.type == 'DELIMETER' and 
             self.current_token.value == '['):
             self.advance()
-            index = self.parse_expression()
+            first_index = self.parse_expression()
             self.expect('DELIMETER', ']')
             
+            # Verificar si hay un segundo índice (matriz)
+            if (self.current_token and self.current_token.type == 'DELIMETER' and 
+                self.current_token.value == '['):
+                self.advance()
+                second_index = self.parse_expression()
+                self.expect('DELIMETER', ']')
+                
+                # Asignación a elemento de matriz: identifier[i][j] == value
+                if (self.current_token and self.current_token.type == 'ASSIGN' and 
+                    self.current_token.value == '=='):
+                    self.advance()
+                    value = self.parse_expression()
+                    return ('matrix_assignment', identifier, first_index, second_index, value)
+                else:
+                    # Solo acceso a elemento de matriz: identifier[i][j]
+                    return ('matrix_access', identifier, first_index, second_index)
+            
             # Asignación a elemento de lista: identifier[index] == value
-            if (self.current_token and self.current_token.type == 'ASSIGN' and 
+            elif (self.current_token and self.current_token.type == 'ASSIGN' and 
                 self.current_token.value == '=='):
                 self.advance()
                 value = self.parse_expression()
-                return ('list_assignment', identifier, index, value)
+                return ('list_assignment', identifier, first_index, value)
             else:
                 # Solo acceso a elemento: identifier[index]
-                return ('list_access', identifier, index)
+                return ('list_access', identifier, first_index)
         
         elif (self.current_token and self.current_token.type == 'ASSIGN' and 
             self.current_token.value == '=='):
@@ -366,13 +383,22 @@ class CulinaryParser:
             value = self.current_token.value
             self.advance()
             
-            # Acceso a índice de lista: identifier[index]
+            # Acceso a índice de lista o matriz: identifier[index] o identifier[i][j]
             if (self.current_token and self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == '['):
                 self.advance()
-                index = self.parse_expression()
+                first_index = self.parse_expression()
                 self.expect('DELIMETER', ']')
-                return ('list_access', value, index)
+                
+                # Verificar si hay un segundo índice (matriz)
+                if (self.current_token and self.current_token.type == 'DELIMETER' and 
+                    self.current_token.value == '['):
+                    self.advance()
+                    second_index = self.parse_expression()
+                    self.expect('DELIMETER', ']')
+                    return ('matrix_access', value, first_index, second_index)
+                else:
+                    return ('list_access', value, first_index)
             
             if (self.current_token and self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == '('):
@@ -649,6 +675,41 @@ if __name__ == '__main__':
             quantity suma == numeros[0] ++ numeros[1]
             taste("Suma: ", suma)
             serve numeros
+        }
+        """,
+        # Prueba de matrices (menu anidado)
+        """
+        recipe pruebaMatrices() {
+            menu matriz == [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+            taste("Matriz completa: ", matriz)
+            
+            quantity elemento == matriz[0][0]
+            taste("Elemento [0][0]: ", elemento)
+            
+            taste("Elemento [1][2]: ", matriz[1][2])
+            
+            matriz[0][1] == 99
+            taste("Elemento [0][1] modificado: ", matriz[0][1])
+            
+            menu fila == matriz[2]
+            taste("Tercera fila: ", fila)
+            taste("Elemento de fila: ", fila[1])
+            
+            serve matriz
+        }
+        """,
+        # Prueba de matriz 2x2
+        """
+        recipe matrizPequena() {
+            menu mat == [[10, 20], [30, 40]]
+            quantity suma == mat[0][0] ++ mat[1][1]
+            taste("Suma diagonal: ", suma)
+            
+            mat[0][0] == 100
+            mat[1][1] == 200
+            
+            taste("Nueva suma: ", mat[0][0] ++ mat[1][1])
+            serve mat
         }
         """
     ]
