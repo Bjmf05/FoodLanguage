@@ -1,12 +1,7 @@
-"""
-ui_components.py
-Ventanas de información y componentes de UI reutilizables para FoodLanguage IDE
-"""
-
 import tkinter as tk
 from tkinter import scrolledtext
 
-# ==================== CONTENIDOS DE INFORMACIÓN ====================
+# INFORMACIÓN GENERAL
 
 def create_info_window(parent, title, content, width=700, height=600):
     """Crear una ventana de información genérica"""
@@ -30,116 +25,114 @@ def create_info_window(parent, title, content, width=700, height=600):
     
     return info_window
 
-# ==================== CONTENIDOS INFORMATIVOS ====================
+#  CONTENIDOS INFORMATIVOS 
 
 KEYWORDS_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║         PALABRAS RESERVADAS - FOODLANGUAGE                 ║
-╚════════════════════════════════════════════════════════════╝
 
-📌 TIPOS DE DATOS:
-   • quantity      → Entero (int)
-   • portion       → Flotante (float)
-   • ingredient    → Cadena (string)
-   • menu          → Lista/Array
+         PALABRAS RESERVADAS - FOODLANGUAGE                 
 
-📌 ESTRUCTURAS DE CONTROL:
-   • if / if_has   → Condicional if
-   • otherwise     → else
-   • cook_while    → Bucle while
-   • stir          → Bucle for
-   • season        → Switch/case
-   • with          → Case en switch
-   • default_flavor → Default en switch
 
-📌 FUNCIONES:
-   • recipe        → Definir función
-   • serve         → Return
-   • taste         → Print/Imprimir
-   • add           → Input/Leer entrada
+ TIPOS DE DATOS:
+   * quantity      -> Entero (int)
+   * portion       -> Flotante (float)
+   * ingredient    -> Cadena (string)
+   * menu          -> Lista/Array
 
-📌 VALORES ESPECIALES:
-   • ready         → true
-   • raw           → false
-   • flavorless    → null
+ ESTRUCTURAS DE CONTROL:
+   * if / if_has   -> Condicional if
+   * otherwise     -> else
+   * cook_while    -> Bucle while
+   * stir          -> Bucle for
+   * season        -> Switch/case
+   * with          -> Case en switch
+   * default_flavor -> Default en switch
 
-📌 CONTROL DE FLUJO:
-   • stop_stirring  → break
-   • keep_stirring  → continue
+ FUNCIONES:
+   * recipe        -> Definir función
+   * serve         -> Return
+   * taste         -> Print/Imprimir
+   * add           -> Input/Leer entrada
 
-📌 OPERADORES LÓGICOS:
-   • spoon         → AND (&&)
-   • fork          → OR (||)
-   • unseasoned    → NOT (!)
+ VALORES ESPECIALES:
+   * ready         -> true
+   * raw           -> false
+   * flavorless    -> null
 
-📌 OPERADORES ARITMÉTICOS:
-   • ++            → Suma
-   • --            → Resta
-   • **            → Multiplicación
-   • \\\\          → División
+ CONTROL DE FLUJO:
+   * stop_stirring  -> break
+   * keep_stirring  -> continue
 
-📌 OPERADORES DE COMPARACIÓN:
-   • ===           → Igual a
-   • !=            → Diferente de
-   • >             → Mayor que
-   • <             → Menor que
-   • >=            → Mayor o igual
-   • <=            → Menor o igual
+ OPERADORES LÓGICOS:
+   * spoon         -> AND (&&)
+   * fork          -> OR (||)
+   * unseasoned    -> NOT (!)
 
-📌 ASIGNACIÓN:
-   • ==            → Asignación (=)
+ OPERADORES ARITMÉTICOS:
+   * ++            -> Suma
+   * --            -> Resta
+   * **            -> Multiplicación
+   * \\\\          -> División
+
+ OPERADORES DE COMPARACIÓN:
+   * ===           -> Igual a
+   * !=            -> Diferente de
+   * >             -> Mayor que
+   * <             -> Menor que
+   * >=            -> Mayor o igual
+   * <=            -> Menor o igual
+
+ ASIGNACIÓN:
+   * ==            -> Asignación (=)
 """
 
 DATA_TYPES_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║              TIPOS DE DATOS - FOODLANGUAGE                 ║
-╚════════════════════════════════════════════════════════════╝
 
-🔢 QUANTITY (Entero):
+              TIPOS DE DATOS - FOODLANGUAGE
+
+ QUANTITY (Entero):
    Representa números enteros.
    
    Ejemplo:
    quantity edad == 25
    quantity contador == 0
 
-📊 PORTION (Flotante):
+ PORTION (Flotante):
    Representa números decimales.
    
    Ejemplo:
    portion precio == 19.99
    portion temperatura == 36.5
 
-📝 INGREDIENT (String):
+ INGREDIENT (String):
    Representa cadenas de texto.
    
    Ejemplo:
    ingredient nombre == "Juan"
    ingredient mensaje == "Hola Mundo"
 
-📋 MENU (Lista):
+ MENU (Lista):
    Representa arreglos/listas de elementos.
    
    Ejemplo:
    menu numeros == [1, 2, 3, 4, 5]
    menu nombres == ["Ana", "Luis", "María"]
    
-   Acceso: numeros[0]  → primer elemento
+   Acceso: numeros[0]  -> primer elemento
 
-🎯 MENU 2D (Matriz):
+ MENU 2D (Matriz):
    Representa matrices (listas de listas).
    
    Ejemplo:
    menu matriz == [[1, 2], [3, 4]]
    
-   Acceso: matriz[0][1]  → elemento en fila 0, columna 1
+   Acceso: matriz[0][1]  -> elemento en fila 0, columna 1
 """
 
 SPECIAL_VALUES_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║           VALORES ESPECIALES - FOODLANGUAGE                ║
-╚════════════════════════════════════════════════════════════╝
+           VALORES ESPECIALES - FOODLANGUAGE
 
-✅ READY (true):
+
+ READY (true):
    Representa el valor booleano verdadero.
    
    Ejemplo:
@@ -147,7 +140,7 @@ SPECIAL_VALUES_CONTENT = """
        taste("Es verdadero")
    }
 
-❌ RAW (false):
+ RAW (false):
    Representa el valor booleano falso.
    
    Ejemplo:
@@ -155,7 +148,7 @@ SPECIAL_VALUES_CONTENT = """
        taste("Es falso")
    }
 
-⭕ FLAVORLESS (null):
+ FLAVORLESS (null):
    Representa un valor nulo o sin sabor.
    
    Ejemplo:
@@ -163,46 +156,45 @@ SPECIAL_VALUES_CONTENT = """
 """
 
 ARITHMETIC_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║         OPERACIONES ARITMÉTICAS - FOODLANGUAGE             ║
-╚════════════════════════════════════════════════════════════╝
 
-➕ SUMA (++):
-   quantity resultado == 5 ++ 3    → 8
+         OPERACIONES ARITMÉTICAS - FOODLANGUAGE
 
-➖ RESTA (--):
-   quantity resultado == 10 -- 4   → 6
+ SUMA (++):
+   quantity resultado == 5 ++ 3    -> 8
 
-✖️ MULTIPLICACIÓN (**):
-   quantity resultado == 6 ** 7    → 42
+ RESTA (--):
+   quantity resultado == 10 -- 4   -> 6
 
-➗ DIVISIÓN (\\\\):
-   quantity resultado == 20 \\\\ 4   → 5
+ MULTIPLICACIÓN (**):
+   quantity resultado == 6 ** 7    -> 42
 
-📌 INCREMENTO/DECREMENTO:
+ DIVISIÓN (\\\\):
+   quantity resultado == 20 \\\\ 4   -> 5
+
+ INCREMENTO/DECREMENTO:
    • Prefijo:  ++x  o  --x
    • Postfijo: x++  o  x--
    
    Ejemplo:
    quantity i == 0
-   i++              → i ahora es 1
-   ++i              → i ahora es 2
+   i++              -> i ahora es 1
+   ++i              -> i ahora es 2
 
-💡 NOTA: Los operadores usan símbolos dobles para
+ NOTA: Los operadores usan símbolos dobles para
    diferenciarlos del incremento/decremento.
 """
 
 COMPARISON_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║        OPERADORES DE COMPARACIÓN - FOODLANGUAGE            ║
-╚════════════════════════════════════════════════════════════╝
 
-🟰 IGUAL A (===):
+        OPERADORES DE COMPARACIÓN - FOODLANGUAGE            
+
+
+= IGUAL A (===):
    if_has (x === 5) {
        taste("x es igual a 5")
    }
 
-≠ DIFERENTE DE (!=):
+!= DIFERENTE DE (!=):
    if_has (x != 0) {
        taste("x no es cero")
    }
@@ -217,26 +209,25 @@ COMPARISON_CONTENT = """
        taste("Bajo cero")
    }
 
-≥ MAYOR O IGUAL (>=):
+>= MAYOR O IGUAL (>=):
    if_has (nota >= 70) {
        taste("Aprobado")
    }
 
-≤ MENOR O IGUAL (<=):
+<= MENOR O IGUAL (<=):
    if_has (stock <= 10) {
        taste("Stock bajo")
    }
 
-💡 NOTA: Use === para igualdad (tres signos igual)
+ NOTA: Use === para igualdad (tres signos igual)
    y == para asignación (dos signos igual).
 """
 
 LOGICAL_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║          OPERADORES LÓGICOS - FOODLANGUAGE                 ║
-╚════════════════════════════════════════════════════════════════╝
 
-🥄 SPOON (AND - &&):
+          OPERADORES LÓGICOS - FOODLANGUAGE
+
+ SPOON (AND - &&):
    Ambas condiciones deben ser verdaderas.
    
    Ejemplo:
@@ -244,7 +235,7 @@ LOGICAL_CONTENT = """
        taste("Puede conducir")
    }
 
-🍴 FORK (OR - ||):
+ FORK (OR - ||):
    Al menos una condición debe ser verdadera.
    
    Ejemplo:
@@ -252,7 +243,7 @@ LOGICAL_CONTENT = """
        taste("Puede descansar")
    }
 
-🧂 UNSEASONED (NOT - !):
+ UNSEASONED (NOT - !):
    Invierte el valor de verdad de una condición.
    
    Ejemplo:
@@ -264,33 +255,33 @@ LOGICAL_CONTENT = """
        taste("Mayor de edad pero sin licencia")
    }
 
-📊 TABLA DE VERDAD SPOON (AND):
-   ready spoon ready   → ready
-   ready spoon raw     → raw
-   raw spoon ready     → raw
-   raw spoon raw       → raw
+ TABLA DE VERDAD SPOON (AND):
+   ready spoon ready   -> ready
+   ready spoon raw     -> raw
+   raw spoon ready     -> raw
+   raw spoon raw       -> raw
 
-📊 TABLA DE VERDAD FORK (OR):
-   ready fork ready    → ready
-   ready fork raw      → ready
-   raw fork ready      → ready
-   raw fork raw        → raw
+ TABLA DE VERDAD FORK (OR):
+   ready fork ready    -> ready
+   ready fork raw      -> ready
+   raw fork ready      -> ready
+   raw fork raw        -> raw
 
-📊 TABLA DE VERDAD UNSEASONED (NOT):
-   unseasoned ready    → raw
-   unseasoned raw      → ready
+ TABLA DE VERDAD UNSEASONED (NOT):
+   unseasoned ready    -> raw
+   unseasoned raw      -> ready
 
-💡 TIP: Use paréntesis para operaciones complejas:
+ TIP: Use paréntesis para operaciones complejas:
    if_has ((a > 5 spoon b < 10) fork unseasoned c) { }
    if_has (unseasoned (x < 0 fork x > 100)) { }
 """
 
 SEMANTICS_VARIABLES_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║            SEMÁNTICA - VARIABLES                           ║
-╚════════════════════════════════════════════════════════════╝
 
-📝 DECLARACIÓN:
+            SEMÁNTICA - VARIABLES                           
+
+
+ DECLARACIÓN:
    Las variables deben declararse con un tipo antes de usarse.
    
    Sintaxis:
@@ -301,40 +292,40 @@ SEMANTICS_VARIABLES_CONTENT = """
    ingredient nombre == "María"
    menu numeros == [1, 2, 3]
 
-🔄 ASIGNACIÓN:
+ ASIGNACIÓN:
    Una vez declarada, puede asignarse un nuevo valor.
    
    edad == 26
    nombre == "Pedro"
 
-⚠️ REGLAS IMPORTANTES:
+ REGLAS IMPORTANTES:
    1. El nombre debe ser único en su scope
    2. Los nombres distinguen mayúsculas/minúsculas
    3. No pueden empezar con números
    4. Pueden contener letras, números y guiones bajos
 
-✅ NOMBRES VÁLIDOS:
+ NOMBRES VÁLIDOS:
    • miVariable
    • contador_1
    • temperatura_max
    • _privado
 
-❌ NOMBRES INVÁLIDOS:
+ NOMBRES INVÁLIDOS:
    • 1variable    (empieza con número)
    • mi-variable  (contiene guión)
    • for          (palabra reservada)
 
-💡 CONVENCIÓN:
+ CONVENCIÓN:
    Use camelCase: miVariable, contadorTotal
    O snake_case: mi_variable, contador_total
 """
 
 SEMANTICS_FUNCTIONS_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║            SEMÁNTICA - FUNCIONES (RECIPES)                 ║
-╚════════════════════════════════════════════════════════════╝
 
-🍳 DEFINICIÓN:
+            SEMÁNTICA - FUNCIONES (RECIPES)                 
+
+
+ DEFINICIÓN:
    Las funciones se definen con la palabra 'recipe'.
    
    Sintaxis:
@@ -343,7 +334,7 @@ SEMANTICS_FUNCTIONS_CONTENT = """
        serve valor_retorno
    }
 
-📥 PARÁMETROS:
+ PARÁMETROS:
    Los parámetros deben tener tipo explícito.
    
    Ejemplo:
@@ -352,26 +343,26 @@ SEMANTICS_FUNCTIONS_CONTENT = """
        serve resultado
    }
 
-📤 RETORNO:
+ RETORNO:
    Use 'serve' para retornar valores.
    
-   • serve valor      → retorna un valor
-   • serve flavorless → retorna null
-   • Solo serve       → retorna sin valor
+   • serve valor      -> retorna un valor
+   • serve flavorless -> retorna null
+   • Solo serve       -> retorna sin valor
 
-📞 LLAMADA:
+ LLAMADA:
    nombreFuncion(arg1, arg2)
    
    Ejemplo:
    quantity total == sumar(5, 3)
 
-⚠️ REGLAS:
+ REGLAS:
    1. El número de argumentos debe coincidir con parámetros
    2. Los tipos deben ser compatibles
    3. Las funciones se declaran antes de usarse
    4. Los parámetros son pasados por valor
 
-💡 EJEMPLO COMPLETO:
+ EJEMPLO COMPLETO:
    recipe calcularArea(quantity base, quantity altura) {
        quantity area == base ** altura \\\\ 2
        serve area
@@ -382,11 +373,10 @@ SEMANTICS_FUNCTIONS_CONTENT = """
 """
 
 SEMANTICS_SCOPE_CONTENT = """
-╔════════════════════════════════════════════════════════════╗
-║            SEMÁNTICA - ALCANCE (SCOPE)                     ║
-╚════════════════════════════════════════════════════════════╝
 
-🌍 ALCANCE GLOBAL:
+            SEMÁNTICA - ALCANCE (SCOPE)                    
+
+ ALCANCE GLOBAL:
    Variables declaradas fuera de funciones.
    Visibles en todo el programa.
    
@@ -396,7 +386,7 @@ SEMANTICS_SCOPE_CONTENT = """
        taste(global)  // Puede acceder a 'global'
    }
 
-🏠 ALCANCE LOCAL:
+ ALCANCE LOCAL:
    Variables declaradas dentro de funciones.
    Solo visibles dentro de esa función.
    
@@ -405,16 +395,16 @@ SEMANTICS_SCOPE_CONTENT = """
        taste(local)
    }
    
-   taste(local)  // ❌ ERROR: 'local' no existe aquí
+   taste(local)  //  ERROR: 'local' no existe aquí
 
-🔍 BÚSQUEDA DE VARIABLES:
+ BÚSQUEDA DE VARIABLES:
    El intérprete busca en este orden:
    1. Scope local (de la función actual)
    2. Scope global
    
    Si no encuentra la variable, genera error.
 
-⚠️ SHADOWING (SOMBREADO):
+ SHADOWING (SOMBREADO):
    Una variable local puede tener el mismo nombre
    que una global, "ocultando" la global.
    
@@ -428,7 +418,7 @@ SEMANTICS_SCOPE_CONTENT = """
    test()
    taste(x)  // Imprime 10 (la global)
 
-💡 EJEMPLO COMPLETO:
+ EJEMPLO COMPLETO:
    quantity contador == 0  // Global
    
    recipe incrementar() {
@@ -440,7 +430,7 @@ SEMANTICS_SCOPE_CONTENT = """
    incrementar()  // contador = 2
    taste(contador)  // Imprime 2
 
-🎯 PARÁMETROS:
+ PARÁMETROS:
    Los parámetros son variables locales.
    
    recipe sumar(quantity a, quantity b) {
@@ -464,5 +454,4 @@ Características:
 • Detección de errores sintácticos
 • Soporte para funciones, ciclos y estructuras de datos
 
-© 2024 - Todos los derechos reservados
 """
