@@ -17,7 +17,13 @@ from ui_components import (
     SEMANTICS_SCOPE_CONTENT, ABOUT_TEXT
 )
 
-
+def resource_path(relative_path):
+    """Obtiene la ruta absoluta al recurso, funciona para dev y para PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 class FoodLanguageIDE:
     """Clase principal del IDE de FoodLanguage"""
     
@@ -40,7 +46,7 @@ class FoodLanguageIDE:
         self.setup_bindings()
         
         # Ícono de la ventana
-        icon_path = os.path.join(os.path.dirname(__file__), 'foodIcon.png')  # Ruta del ícono
+        icon_path = resource_path('foodIcon.png')  # Ruta del ícono
         icon_image = tk.PhotoImage(file=icon_path)
         self.root.iconphoto(False, icon_image)
     
@@ -790,3 +796,4 @@ class FoodLanguageIDE:
         
         check_input()
         return var
+    

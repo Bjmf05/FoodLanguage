@@ -270,12 +270,12 @@ recipe validarEdad() {
     serve ready
 }
 
-taste("=== CONTROL DE ACCESO ===")
+taste("CONTROL DE ACCESO")
 validarEdad()''',
     
     # 15. Formulario Completo
     '''// Formulario con múltiples inputs
-taste("=== FORMULARIO DE REGISTRO ===\n")
+taste("FORMULARIO DE REGISTRO")
 
 ingredient nombre
 ingredient apellido
@@ -289,7 +289,7 @@ add("Edad: ", edad)
 add("Email: ", email)
 add("Altura (metros): ", altura)
 
-taste("\n=== DATOS REGISTRADOS ===")
+taste("DATOS REGISTRADOS")
 taste("─────────────────────────────")
 taste("Nombre completo:", nombre, apellido)
 taste("Edad:", edad, "años")
@@ -297,7 +297,7 @@ taste("Email:", email)
 taste("Altura:", altura, "m")
 
 if_has (edad >= 18) {
-    taste("Estado: Mayor de edad ✓")
+    taste("Estado: Mayor de edad ")
 } otherwise {
     taste("Estado: Menor de edad")
 }
