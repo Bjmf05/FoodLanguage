@@ -2,7 +2,7 @@ from lexer import Lexer
 from parser import CulinaryParser
 
 class CulinaryInterpreter:
-    def __init__(self):
+    def __init__(self, input_callback=None):
         self.global_scope = {}
         self.local_scopes = [{}]
         self.variable_types = {}  # Almacena el tipo declarado de cada variable
@@ -11,6 +11,7 @@ class CulinaryInterpreter:
         self.return_value = None
         self.break_flag = False
         self.continue_flag = False
+        self.input_callback = input_callback  # Callback para manejar input en GUI
     
     def get_current_scope(self):
         """Retorna el scope actual (local si existe, sino global)"""
@@ -287,10 +288,22 @@ class CulinaryInterpreter:
     def eval_input(self, node):
         """Evalúa la función add (input)"""
         _, var_name, prompt = node
-        if prompt:
-            user_input = input(prompt + " ")
+        
+        # Si hay callback (GUI mode), usarlo; sino usar input() normal (consola)
+        if self.input_callback:
+            if prompt:
+                user_input = self.input_callback(prompt)
+            else:
+                user_input = self.input_callback("Ingrese un valor: ")
         else:
-            user_input = input()
+            if prompt:
+                user_input = input(prompt + " ")
+            else:
+                user_input = input()
+        
+        # Si el usuario canceló el input en GUI
+        if user_input is None:
+            user_input = ""
         
         # Intentar convertir a número si es posible
         try:
@@ -301,7 +314,23 @@ class CulinaryInterpreter:
         except ValueError:
             value = user_input
         
-        self.set_variable(var_name, value)
+        # Validar el tipo antes de asignar
+        self.validate_type(var_name, value)
+        
+        # Buscar en qué scope existe la variable y actualizar
+        found = False
+        for scope in reversed(self.local_scopes):
+            if var_name in scope:
+                scope[var_name] = value
+                found = True
+                break
+        
+        if not found and var_name in self.global_scope:
+            self.global_scope[var_name] = value
+        elif not found:
+            # Si no existe, crearla en el scope actual
+            self.set_variable(var_name, value)
+        
         return value
     
     def eval_if(self, node):
@@ -368,7 +397,7 @@ class CulinaryInterpreter:
                     self.continue_flag = False
                     break
             
-            # Ejecutar incremento (puede ser expresión o statement)
+            # Ejecutar incremento
             if increment[0] == 'assignment':
                 self.eval_node(increment)
             else:
@@ -403,9 +432,6 @@ class CulinaryInterpreter:
                     
                     if self.continue_flag:
                         return None
-                
-                # En FoodLanguage, por defecto hay break implícito
-                # (no hay fall-through como en C)
                 break
         
         # Si no coincidió ningún caso, ejecutar default
@@ -447,11 +473,8 @@ class CulinaryInterpreter:
         
         # Asignar parámetros con sus tipos
         for (param_type, param_name), arg_value in zip(params, arg_values):
-            # Establecer el tipo del parámetro
             self.set_variable_type(param_name, param_type)
-            # Validar el tipo del argumento
             self.validate_type(param_name, arg_value)
-            # Asignar el valor
             self.set_variable(param_name, arg_value)
         
         # Ejecutar cuerpo de la función
@@ -677,9 +700,9 @@ def run_food_language(code, debug=False):
         # Re-lanzar la excepción para que pueda ser capturada por los tests
         raise
 
-# Ejemplos de uso
+
 if __name__ == '__main__':
-    # Ejemplo 1: Función simple
+    # Prueba 1: Función simple
     code1 = """
     recipe saludar(ingredient nombre) {
         taste("¡Hola", nombre, "!")
@@ -689,10 +712,10 @@ if __name__ == '__main__':
     saludar("Chef")
     """
     
-    print("=== Ejemplo 1: Función simple ===")
+    print("=== Prueba 1: Función simple ===")
     run_food_language(code1, debug=True)
     
-    # Ejemplo 2: Ciclo while
+    # Prueba 2: Ciclo while
     code2 = """
     quantity i == 1
     cook_while (i <= 5) {
@@ -701,10 +724,10 @@ if __name__ == '__main__':
     }
     """
     
-    print("\n=== Ejemplo 2: Ciclo while ===")
+    print("\n=== Prueba 2: Ciclo while ===")
     run_food_language(code2, debug=True)
     
-    # Ejemplo 3: Listas
+    # Prueba 3: Listas
     code3 = """
     menu numeros == [10, 20, 30, 40, 50]
     taste("Lista:", numeros)
@@ -717,10 +740,10 @@ if __name__ == '__main__':
     taste("Suma:", suma)
     """
     
-    print("\n=== Ejemplo 3: Listas ===")
+    print("\n=== Prueba 3: Listas ===")
     run_food_language(code3, debug=True)
     
-    # Ejemplo 4: Matrices
+    # Prueba 4: Matrices
     code4 = """
     menu matriz == [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     taste("Matriz:", matriz)
@@ -731,10 +754,10 @@ if __name__ == '__main__':
     taste("Centro modificado:", matriz[1][1])
     """
     
-    print("\n=== Ejemplo 4: Matrices ===")
+    print("\n=== Prueba 4: Matrices ===")
     run_food_language(code4, debug=True)
     
-    # Ejemplo 5: If/else
+    # Prueba 5: If/else
     code5 = """
     quantity edad == 18
     
@@ -745,10 +768,10 @@ if __name__ == '__main__':
     }
     """
     
-    print("\n=== Ejemplo 5: If/else ===")
+    print("\n=== Prueba 5: If/else ===")
     run_food_language(code5, debug=True)
     
-    # Ejemplo 6: Función con retorno
+    # Prueba 6: Función con retorno
     code6 = """
     recipe sumar(quantity a, quantity b) {
         quantity resultado == a ++ b
@@ -759,10 +782,10 @@ if __name__ == '__main__':
     taste("5 + 3 =", total)
     """
     
-    print("\n=== Ejemplo 6: Función con retorno ===")
+    print("\n=== Prueba 6: Función con retorno ===")
     run_food_language(code6, debug=True)
     
-    # Ejemplo 7: Ciclo for (stir)
+    # Prueba 7: Ciclo for (stir)
     code7 = """
     taste("Contando del 1 al 5:")
     stir (quantity i == 1, i <= 5, i == i ++ 1) {
@@ -776,10 +799,10 @@ if __name__ == '__main__':
     }
     """
     
-    print("\n=== Ejemplo 7: Ciclo for (stir) ===")
+    print("\n=== Prueba 7: Ciclo for (stir) ===")
     run_food_language(code7, debug=True)
     
-    # Ejemplo 8: Factorial recursivo
+    # Prueba 8: Factorial recursivo
     code8 = """
     recipe factorial(quantity n) {
         if_has (n <= 1) {
@@ -792,10 +815,10 @@ if __name__ == '__main__':
     taste("Factorial de 5:", factorial(5))
     """
     
-    print("\n=== Ejemplo 8: Factorial recursivo ===")
+    print("\n=== Prueba 8: Factorial recursivo ===")
     run_food_language(code8, debug=True)
     
-    # Ejemplo 9: Switch (season)
+    # Prueba 9: Switch (season)
     code9 = """
     quantity dia == 3
     
@@ -830,5 +853,5 @@ if __name__ == '__main__':
     }
     """
     
-    print("\n=== Ejemplo 9: Switch (season) ===")
+    print("\n=== Prueba 9: Switch (season) ===")
     run_food_language(code9, debug=True)

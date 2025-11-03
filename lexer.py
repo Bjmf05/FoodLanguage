@@ -7,7 +7,6 @@ class Lexer:
     
     def tokenize(self):
         tokens = []
-        in_comment = False
         for line_number, line in enumerate(self.text.splitlines(),start=1):
             line_pos = 0
             while line_pos < len(line):
@@ -15,11 +14,7 @@ class Lexer:
                     match = pattern.match(line,line_pos)
                     if match:
                         value = match.group(0)
-                        if name == 'COMMENT_START':
-                            in_comment = True
-                        elif name == 'COMMENT_END':
-                            in_comment = False
-                        elif not in_comment and name != 'WHITESPACE':
+                        if name not in ['COMMENT', 'WHITESPACE']:
                             tokens.append(Token(name, value, line_number, line_pos))
                         line_pos += len(value)
                         break

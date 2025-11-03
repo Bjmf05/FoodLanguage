@@ -124,6 +124,12 @@ class FoodLanguageIDE:
         functions_menu.add_command(label="Definir función", command=lambda: self.insert_template('function'))
         functions_menu.add_command(label="Llamar función", command=lambda: self.insert_template('call'))
         
+        # Submenú Entrada/Salida
+        io_menu = tk.Menu(syntax_menu, tearoff=0, bg='#3c3c3c', fg='#e0e0e0')
+        syntax_menu.add_cascade(label="Entrada/Salida", menu=io_menu)
+        io_menu.add_command(label="add (Input)", command=lambda: self.insert_template('input'))
+        io_menu.add_command(label="taste (Print)", command=lambda: self.insert_template('print'))
+        
         # Submenú Operaciones
         operations_menu = tk.Menu(syntax_menu, tearoff=0, bg='#3c3c3c', fg='#e0e0e0')
         syntax_menu.add_cascade(label="Operaciones", menu=operations_menu)
@@ -177,10 +183,30 @@ class FoodLanguageIDE:
                                 font=('Consolas', 12, 'bold'))
         editor_label.pack(pady=(0, 5))
         
+        # Frame contenedor para editor con números de línea
+        editor_frame = ttk.Frame(left_panel)
+        editor_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Widget para números de línea
+        self.line_numbers = tk.Text(
+            editor_frame,
+            width=4,
+            padx=5,
+            pady=10,
+            font=('Consolas', 11),
+            bg='#2d2d2d',
+            fg='#858585',
+            relief=tk.FLAT,
+            state=tk.DISABLED,
+            takefocus=0,
+            cursor='arrow'
+        )
+        self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
+        
         # Área de texto para código
-        self.code_text = scrolledtext.ScrolledText(
-            left_panel,
-            wrap=tk.WORD,
+        self.code_text = tk.Text(
+            editor_frame,
+            wrap=tk.NONE,
             width=60,
             height=30,
             font=('Consolas', 11),
@@ -190,9 +216,26 @@ class FoodLanguageIDE:
             selectbackground='#264f78',
             relief=tk.FLAT,
             padx=10,
-            pady=10
+            pady=10,
+            undo=True,
+            maxundo=-1
         )
-        self.code_text.pack(fill=tk.BOTH, expand=True)
+        self.code_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Scrollbar para el editor
+        scrollbar = tk.Scrollbar(editor_frame, command=self._on_scroll)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Configurar scroll
+        self.code_text.config(yscrollcommand=scrollbar.set)
+        
+        # Bind eventos para actualizar números de línea
+        self.code_text.bind('<KeyRelease>', self._update_line_numbers)
+        self.code_text.bind('<MouseWheel>', self._update_line_numbers)
+        self.code_text.bind('<Button-1>', self._update_line_numbers)
+        
+        # Inicializar números de línea
+        self._update_line_numbers()
         
         # Frame de botones
         self._create_button_frame(left_panel)
@@ -257,9 +300,13 @@ class FoodLanguageIDE:
                                 font=('Consolas', 12, 'bold'))
         output_label.pack(pady=(0, 5))
         
+        # Frame contenedor para output y input
+        console_frame = ttk.Frame(right_panel)
+        console_frame.pack(fill=tk.BOTH, expand=True)
+        
         # Área de output
         self.output_text = scrolledtext.ScrolledText(
-            right_panel,
+            console_frame,
             wrap=tk.WORD,
             width=50,
             height=30,
@@ -273,10 +320,39 @@ class FoodLanguageIDE:
         )
         self.output_text.pack(fill=tk.BOTH, expand=True)
         
+        # Frame para input (inicialmente oculto)
+        self.input_frame = ttk.Frame(console_frame)
+        
+        # Label para el prompt
+        self.input_label = ttk.Label(
+            self.input_frame,
+            text="",
+            font=('Consolas', 10),
+            foreground='#9cdcfe'
+        )
+        self.input_label.pack(side=tk.LEFT, padx=(5, 5))
+        
+        # Entry para el input del usuario
+        self.input_entry = tk.Entry(
+            self.input_frame,
+            font=('Consolas', 10),
+            bg='#1e1e1e',
+            fg='#d4d4d4',
+            insertbackground='#ffffff',
+            relief=tk.FLAT
+        )
+        self.input_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        # Variable para almacenar el resultado del input
+        self.input_result = None
+        self.waiting_for_input = False
+        
         # Configurar tags para colores
         self.output_text.tag_config('error', foreground='#f48771')
         self.output_text.tag_config('success', foreground='#4ec9b0')
         self.output_text.tag_config('info', foreground='#9cdcfe')
+        self.output_text.tag_config('prompt', foreground='#dcdcaa')
+        self.output_text.tag_config('input', foreground='#4fc1ff')
     
     # Archivos
     
@@ -405,6 +481,34 @@ class FoodLanguageIDE:
                 self.save_file()
         
         self.root.destroy()
+    
+    # Números de línea
+    
+    def _update_line_numbers(self, event=None):
+        """Actualizar los números de línea"""
+        # Obtener el contenido actual
+        line_count = self.code_text.get(1.0, tk.END).count('\n')
+        
+        # Generar números de línea
+        line_numbers_string = "\n".join(str(i) for i in range(1, line_count + 1))
+        
+        # Actualizar el widget de números de línea
+        self.line_numbers.config(state=tk.NORMAL)
+        self.line_numbers.delete(1.0, tk.END)
+        self.line_numbers.insert(1.0, line_numbers_string)
+        self.line_numbers.config(state=tk.DISABLED)
+        
+        # Sincronizar el scroll
+        self._sync_scroll()
+    
+    def _on_scroll(self, *args):
+        """Manejar el scroll del editor"""
+        self.code_text.yview(*args)
+        self.line_numbers.yview(*args)
+    
+    def _sync_scroll(self):
+        """Sincronizar el scroll entre el editor y los números de línea"""
+        self.line_numbers.yview_moveto(self.code_text.yview()[0])
 
     # Interfaz de usuario
 
@@ -458,7 +562,7 @@ class FoodLanguageIDE:
     def show_logical(self):
         """Mostrar operadores lógicos"""
         create_info_window(self.root, "Operadores Lógicos", LOGICAL_CONTENT, 600, 400)
-    
+       
     def show_semantics_variables(self):
         """Mostrar semántica de variables"""
         create_info_window(self.root, "Semántica - Variables", SEMANTICS_VARIABLES_CONTENT, 700, 500)
@@ -602,8 +706,8 @@ class FoodLanguageIDE:
             old_stdout = sys.stdout
             sys.stdout = io.StringIO()
             
-            # Interpreter
-            interpreter = CulinaryInterpreter()
+            # Interpreter con callback para input
+            interpreter = CulinaryInterpreter(input_callback=self.console_input)
             interpreter.interpret(ast)
             
             # Obtener output
@@ -628,3 +732,56 @@ class FoodLanguageIDE:
             import traceback
             self.write_output("\nDetalles técnicos:\n", 'info')
             self.write_output(traceback.format_exc(), 'error')
+    
+    def console_input(self, prompt):
+        """Input estilo consola en el panel de output"""
+        self.write_output(prompt, 'prompt')
+        
+        # Resetear variables
+        self.input_result = None
+        self.waiting_for_input = True
+        
+        # Configurar el input_entry
+        self.input_label.config(text="Ingresa valor: ")
+        self.input_entry.delete(0, tk.END)
+        
+        # Mostrar el frame de input
+        self.input_frame.pack(fill=tk.X, pady=(5, 5))
+        
+        # Enfocar el entry
+        self.input_entry.focus_set()
+        
+        # Bind para capturar Enter
+        def on_enter(event):
+            if self.waiting_for_input:
+                self.input_result = self.input_entry.get()
+                self.waiting_for_input = False
+                
+                
+                self.write_output(self.input_result + "\n", 'input')
+                
+            
+                self.input_frame.pack_forget()
+                
+                # Unbind el evento
+                self.input_entry.unbind('<Return>')
+        
+        self.input_entry.bind('<Return>', on_enter)
+        
+        # Esperar a que el usuario ingrese algo
+        self.root.wait_variable(self._create_wait_variable())
+        
+        return self.input_result if self.input_result is not None else ""
+    
+    def _create_wait_variable(self):
+        """Crear una variable para wait_variable que se actualiza cuando se completa el input"""
+        var = tk.StringVar()
+        
+        def check_input():
+            if not self.waiting_for_input:
+                var.set("done")
+            else:
+                self.root.after(100, check_input)
+        
+        check_input()
+        return var

@@ -29,7 +29,10 @@ CODE_TEMPLATES = {
     'float': '''portion variable == 0.0''',
     'string': '''ingredient variable == "texto"''',
     'list': '''menu lista == [1, 2, 3, 4, 5]''',
-    'matrix': '''menu matriz == [[1, 2], [3, 4]]'''
+    'matrix': '''menu matriz == [[1, 2], [3, 4]]''',
+    'input': '''ingredient variable
+add("Mensaje: ", variable)''',
+    'print': '''taste("Mensaje", variable)'''
 }
 
 # EJEMPLOS
@@ -47,8 +50,11 @@ EXAMPLE_NAMES = [
     "10. Función con Retorno",
     "11. Factorial Recursivo",
     "12. Switch (Season)",
-    "13. Entrada de Usuario",
-    "14. Programa Completo"
+    "13. Entrada de Usuario (add)",
+    "14. Calculadora Interactiva",
+    "15. Validación de Edad",
+    "16. Formulario Completo",
+    "17. Programa Completo"
 ]
 
 EXAMPLE_CODES = [
@@ -187,21 +193,129 @@ season (dia) {
         taste("Fin de semana - Descanso")
 }''',
     
-    # 12. Entrada de Usuario
-    '''ingredient nombre
-add("Ingrese su nombre:", nombre)
-taste("¡Hola", nombre, "!")
+    # 12. Entrada de Usuario (add)
+    '''//Ejemplo básico de input
+taste("REGISTRO DE USUARIO")
+
+ingredient nombre
+add("Ingrese su nombre: ", nombre)
+taste("Hola", nombre, "!")
 
 quantity edad
-add("Ingrese su edad:", edad)
+add("Ingrese su edad: ", edad)
 
 if_has (edad >= 18) {
     taste("Eres mayor de edad,", nombre)
 } otherwise {
     taste("Eres menor de edad,", nombre)
+}
+
+ingredient ciudad
+add("¿De dónde eres? ", ciudad)
+taste("Bienvenido de", ciudad)''',
+    
+    # 13. Calculadora Interactiva
+    '''// Calculadora con inputs
+taste("CALCULADORA")
+
+quantity num1
+quantity num2
+
+add("Ingrese el primer número: ", num1)
+add("Ingrese el segundo número: ", num2)
+
+taste("Resultados:")
+taste("─────────────────────────")
+
+quantity suma == num1 ++ num2
+taste("Suma:", num1, "++", num2, "=", suma)
+
+quantity resta == num1 -- num2
+taste("Resta:", num1, "--", num2, "=", resta)
+
+quantity mult == num1 ** num2
+taste("Multiplicación:", num1, "**", num2, "=", mult)
+
+if_has (num2 != 0) {
+    portion div == num1 \\\\ num2
+    taste("División:", num1, "\\\\", num2, "=", div)
+} otherwise {
+    taste("División: No se puede dividir por cero")
 }''',
     
-    # 13. Programa Completo
+    # 14. Validación de Edad
+    '''// Input con validación
+recipe validarEdad() {
+    quantity edad
+    add("Ingrese su edad: ", edad)
+    
+    if_has (edad < 0) {
+        taste("ERROR: La edad no puede ser negativa")
+        serve raw
+    }
+    
+    if_has (edad > 120) {
+        taste("ERROR: Edad no válida")
+        serve raw
+    }
+    
+    if_has (edad >= 18) {
+        taste("Acceso permitido - Mayor de edad")
+    } otherwise {
+        taste("Acceso denegado - Menor de edad")
+        quantity faltan == 18 -- edad
+        taste("Te faltan", faltan, "años")
+    }
+    
+    serve ready
+}
+
+taste("=== CONTROL DE ACCESO ===")
+validarEdad()''',
+    
+    # 15. Formulario Completo
+    '''// Formulario con múltiples inputs
+taste("=== FORMULARIO DE REGISTRO ===\n")
+
+ingredient nombre
+ingredient apellido
+quantity edad
+ingredient email
+portion altura
+
+add("Nombre: ", nombre)
+add("Apellido: ", apellido)
+add("Edad: ", edad)
+add("Email: ", email)
+add("Altura (metros): ", altura)
+
+taste("\n=== DATOS REGISTRADOS ===")
+taste("─────────────────────────────")
+taste("Nombre completo:", nombre, apellido)
+taste("Edad:", edad, "años")
+taste("Email:", email)
+taste("Altura:", altura, "m")
+
+if_has (edad >= 18) {
+    taste("Estado: Mayor de edad ✓")
+} otherwise {
+    taste("Estado: Menor de edad")
+}
+
+if_has (altura >= 1.80) {
+    taste("Altura: Alto")
+} otherwise {
+    if_has (altura >= 1.60) {
+        taste("Altura: Promedio")
+    } otherwise {
+        taste("Altura: Bajo")
+    }
+}
+
+taste("─────────────────────────────")
+taste("Registro completado exitosamente!")''',
+    
+    # 16. Programa Completo
     '''recipe calcularPromedio(menu notas) {
     quantity suma == 0
     quantity i == 0

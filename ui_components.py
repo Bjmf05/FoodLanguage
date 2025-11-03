@@ -51,7 +51,7 @@ KEYWORDS_CONTENT = """
    * recipe        -> Definir función
    * serve         -> Return
    * taste         -> Print/Imprimir
-   * add           -> Input/Leer entrada
+   * add           -> Input/Leer entrada del usuario
 
  VALORES ESPECIALES:
    * ready         -> true
@@ -83,6 +83,9 @@ KEYWORDS_CONTENT = """
 
  ASIGNACIÓN:
    * ==            -> Asignación (=)
+
+ COMENTARIOS:
+   * //            -> Comentario de una línea
 """
 
 DATA_TYPES_CONTENT = """

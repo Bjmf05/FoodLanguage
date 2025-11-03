@@ -37,6 +37,8 @@ token_patterns = [
     ('LESS_EQUAL', r'<='),         # <=
     ('GREATER', r'>'),             # >
     ('LESS', r'<'),                # <
+    # Comentarios
+    ('COMMENT', r'//.*'),                            # Comentarios de una línea
     # Identificadores, números, cadenas, etc.
     ('IDENTIFIER', r'\b[a-zA-Z_][a-zA-Z_0-9]*\b'),
     ('NUMBER', r'[+-]?(\d*\.\d+|\d+\.\d*|\d+)'),
