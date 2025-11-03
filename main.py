@@ -1,8 +1,3 @@
-"""
-main_new.py
-Punto de entrada principal para FoodLanguage IDE
-"""
-
 import tkinter as tk
 from ide_window import FoodLanguageIDE
 

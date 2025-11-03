@@ -39,6 +39,11 @@ class FoodLanguageIDE:
         self.create_main_layout()
         self.setup_bindings()
         
+        # Ícono de la ventana
+        icon_path = os.path.join(os.path.dirname(__file__), 'foodIcon.png')  # Ruta del ícono
+        icon_image = tk.PhotoImage(file=icon_path)
+        self.root.iconphoto(False, icon_image)
+    
     def setup_style(self):
         """Configurar estilo de la aplicación"""
         style = ttk.Style()
