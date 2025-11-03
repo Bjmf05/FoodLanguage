@@ -69,6 +69,14 @@ class CulinaryParser:
             elif (self.current_token.type == 'CONTINUE' and 
                   self.current_token.value.lower() == 'keep_stirring'):
                 self.tree.append(self.parse_continue())
+            elif (self.current_token.type in ['PLUS', 'MINUS'] and 
+                  self.current_token.value in ['++', '--']):
+                operator = self.current_token.value
+                raise SyntaxError(
+                    f"Operador prefijo '{operator}' no está permitido. "
+                    f"Use la forma postfija (ej: variable{operator}) o "
+                    f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
+                )
             else:
                 raise SyntaxError(f"Token inesperado {self.current_token.type}:{self.current_token.value}")
         return self.tree
@@ -183,6 +191,14 @@ class CulinaryParser:
         elif (self.current_token.type == 'CONTINUE' and 
               self.current_token.value.lower() == 'keep_stirring'):
             return self.parse_continue()
+        elif (self.current_token.type in ['PLUS', 'MINUS'] and 
+              self.current_token.value in ['++', '--']):
+            operator = self.current_token.value
+            raise SyntaxError(
+                f"Operador prefijo '{operator}' no está permitido. "
+                f"Use la forma postfija (ej: variable{operator}) o "
+                f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
+            )
         else:
             raise SyntaxError(f"Declaración inesperada: {self.current_token}")
 
@@ -346,18 +362,6 @@ class CulinaryParser:
             left = ('binary_op', left, operator, right)
         return left
     
-    def parse_inc_dec(self):
-        if (self.current_token.type in ['PLUS', 'MINUS'] and
-            self.current_token.value in ['++', '--']):
-            operator = self.current_token.value
-            self.advance()
-            if self.current_token.type == 'IDENTIFIER':
-                var_name = self.current_token.value
-                self.advance()
-                return ('inc_dec_pre', operator, var_name)
-            else:
-                raise SyntaxError(f"Se esperaba nombre de variable para incremento/decremento, se encontró {self.current_token}")
-
     def parse_unary(self):
         # Manejar operador NOT (unseasoned)
         if (self.current_token and self.current_token.type == 'NOT' and
@@ -372,17 +376,14 @@ class CulinaryParser:
         if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
             self.current_token.value in ['++', '--']):
             operator = self.current_token.value
-            self.advance()
-        
-            if self.current_token and self.current_token.type == 'IDENTIFIER':
-                identifier = self.current_token.value
-                self.advance()
-                return ('inc_dec_prefix', operator, identifier)
-            else:
-                raise SyntaxError(f"Se esperaba identificador después de {operator}")
+            raise SyntaxError(
+                f"Operador prefijo '{operator}' no está permitido. "
+                f"Use la forma postfija (ej: variable{operator}) o "
+                f"la forma explícita (ej: variable == variable {'++' if operator == '++' else '--'} 1)"
+            )
         
         # Literal de lista: [1, 2, 3]
-        elif (self.current_token and self.current_token.type == 'DELIMETER' and 
+        if (self.current_token and self.current_token.type == 'DELIMETER' and 
               self.current_token.value == '['):
             return self.parse_list_literal()
             
@@ -453,10 +454,6 @@ class CulinaryParser:
             expr = self.parse_expression()
             self.expect('DELIMETER', ')')
             return expr
-        
-        elif self.current_token and (self.current_token.type in ['PLUS', 'MINUS'] and
-             self.current_token.value in ['++', '--']):
-            return self.parse_inc_dec()
         
         else:
             raise SyntaxError(f"Expresión inválida: {self.current_token}")

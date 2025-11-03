@@ -5,6 +5,8 @@ class CulinaryInterpreter:
     def __init__(self):
         self.global_scope = {}
         self.local_scopes = [{}]
+        self.variable_types = {}  # Almacena el tipo declarado de cada variable
+        self.local_types = [{}]   # Tipos de variables locales
         self.functions = {}
         self.return_value = None
         self.break_flag = False
@@ -13,6 +15,90 @@ class CulinaryInterpreter:
     def get_current_scope(self):
         """Retorna el scope actual (local si existe, sino global)"""
         return self.local_scopes[-1] if len(self.local_scopes) > 1 else self.global_scope
+    
+    def get_current_type_scope(self):
+        """Retorna el scope de tipos actual"""
+        return self.local_types[-1] if len(self.local_types) > 1 else self.variable_types
+    
+    def get_variable_type(self, name):
+        """Obtiene el tipo declarado de una variable (si existe)"""
+        # Buscar en scopes locales de tipos
+        for type_scope in reversed(self.local_types):
+            if name in type_scope:
+                return type_scope[name]
+        
+        # Buscar en scope global de tipos
+        if name in self.variable_types:
+            return self.variable_types[name]
+        
+        return None  # Variable sin tipo declarado (tipado dinámico)
+    
+    def set_variable_type(self, name, var_type):
+        """Establece el tipo declarado de una variable"""
+        type_scope = self.get_current_type_scope()
+        type_scope[name] = var_type
+    
+    def validate_type(self, var_name, value):
+        """Valida que el valor sea compatible con el tipo declarado de la variable"""
+        declared_type = self.get_variable_type(var_name)
+        
+        # Si no hay tipo declarado, permitir cualquier valor (tipado dinámico)
+        if declared_type is None:
+            return True
+        
+        # Mapeo de tipos FoodLanguage a tipos Python
+        type_mapping = {
+            'quantity': int,
+            'portion': float,
+            'ingredient': str,
+            'menu': list
+        }
+        
+        # Mapeo de tipos Python a nombres en FoodLanguage para mensajes de error
+        python_to_food_type = {
+            int: 'quantity',
+            float: 'portion', 
+            str: 'ingredient',
+            list: 'menu',
+            bool: 'quantity'  # Los booleanos se consideran quantity
+        }
+        
+        expected_python_type = type_mapping.get(declared_type.lower())
+        
+        if expected_python_type is None:
+            return True  # Tipo desconocido, permitir
+        
+        # Obtener el tipo actual del valor en terminología FoodLanguage
+        actual_python_type = type(value)
+        actual_food_type = python_to_food_type.get(actual_python_type, actual_python_type.__name__)
+        
+        # Validación especial para números
+        if expected_python_type == int:
+            if not isinstance(value, (int, bool)) or isinstance(value, bool):
+                raise TypeError(
+                    f"No se puede asignar valor de tipo '{actual_food_type}' "
+                    f"a variable '{var_name}' de tipo '{declared_type}' (se esperaba quantity)"
+                )
+        elif expected_python_type == float:
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise TypeError(
+                    f"No se puede asignar valor de tipo '{actual_food_type}' "
+                    f"a variable '{var_name}' de tipo '{declared_type}' (se esperaba portion)"
+                )
+        elif expected_python_type == str:
+            if not isinstance(value, str):
+                raise TypeError(
+                    f"No se puede asignar valor de tipo '{actual_food_type}' "
+                    f"a variable '{var_name}' de tipo '{declared_type}' (se esperaba ingredient)"
+                )
+        elif expected_python_type == list:
+            if not isinstance(value, list):
+                raise TypeError(
+                    f"No se puede asignar valor de tipo '{actual_food_type}' "
+                    f"a variable '{var_name}' de tipo '{declared_type}' (se esperaba menu)"
+                )
+        
+        return True
     
     def get_variable(self, name):
         """Busca una variable en los scopes (local primero, luego global)"""
@@ -93,9 +179,20 @@ class CulinaryInterpreter:
         if len(node) == 4:
             _, var_type, var_name, value = node
             evaluated_value = self.eval_expression(value)
+            
+            # Guardar el tipo declarado
+            self.set_variable_type(var_name, var_type)
+            
+            # Validar que el valor inicial sea compatible con el tipo
+            self.validate_type(var_name, evaluated_value)
+            
             self.set_variable(var_name, evaluated_value)
         else:
             _, var_type, var_name = node
+            
+            # Guardar el tipo declarado
+            self.set_variable_type(var_name, var_type)
+            
             # Inicializar con valor por defecto según tipo
             default_values = {
                 'quantity': 0,
@@ -111,6 +208,9 @@ class CulinaryInterpreter:
         _, var_name, value = node
         evaluated_value = self.eval_expression(value)
         
+        # Validar el tipo si la variable ya existe con un tipo declarado
+        self.validate_type(var_name, evaluated_value)
+        
         # Buscar en qué scope existe la variable
         found = False
         for scope in reversed(self.local_scopes):
@@ -122,7 +222,7 @@ class CulinaryInterpreter:
         if not found and var_name in self.global_scope:
             self.global_scope[var_name] = evaluated_value
         elif not found:
-            # Si no existe, crearla en el scope actual
+            # Si no existe, crearla en el scope actual (tipado dinámico)
             self.set_variable(var_name, evaluated_value)
         
         return evaluated_value
@@ -343,9 +443,15 @@ class CulinaryInterpreter:
         
         # Crear nuevo scope local
         self.local_scopes.append({})
+        self.local_types.append({})
         
-        # Asignar parámetros
+        # Asignar parámetros con sus tipos
         for (param_type, param_name), arg_value in zip(params, arg_values):
+            # Establecer el tipo del parámetro
+            self.set_variable_type(param_name, param_type)
+            # Validar el tipo del argumento
+            self.validate_type(param_name, arg_value)
+            # Asignar el valor
             self.set_variable(param_name, arg_value)
         
         # Ejecutar cuerpo de la función
@@ -360,6 +466,7 @@ class CulinaryInterpreter:
         
         # Salir del scope local
         self.local_scopes.pop()
+        self.local_types.pop()
         
         return return_val
     
@@ -408,8 +515,6 @@ class CulinaryInterpreter:
             return self.eval_logical_or(node)
         elif node_type == 'logical_not':
             return self.eval_logical_not(node)
-        elif node_type == 'inc_dec_prefix':
-            return self.eval_inc_dec_prefix(node)
         elif node_type == 'inc_dec_postfix':
             return self.eval_inc_dec_postfix(node)
         elif node_type == 'function_call':
@@ -531,22 +636,6 @@ class CulinaryInterpreter:
         operand_val = self.eval_expression(operand)
         return not bool(operand_val)
     
-    def eval_inc_dec_prefix(self, node):
-        """Evalúa incremento/decremento prefijo (++x, --x)"""
-        _, operator, var_name = node
-        
-        current_value = self.get_variable(var_name)
-        
-        if operator == '++':
-            new_value = current_value + 1
-        else:  # '--'
-            new_value = current_value - 1
-        
-        # Actualizar variable
-        self.eval_assignment(('assignment', var_name, ('number', new_value)))
-        
-        return new_value
-    
     def eval_inc_dec_postfix(self, node):
         """Evalúa incremento/decremento postfijo (x++, x--)"""
         _, var_name, operator = node
@@ -564,7 +653,7 @@ class CulinaryInterpreter:
         return current_value  # Retorna el valor ANTES del incremento
 
 # Función principal para ejecutar código
-def run_food_language(code):
+def run_food_language(code, debug=False):
     """Ejecuta código de FoodLanguage"""
     try:
         # Lexer
@@ -581,10 +670,12 @@ def run_food_language(code):
         
         return result
     except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
+        if debug:
+            print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
+        # Re-lanzar la excepción para que pueda ser capturada por los tests
+        raise
 
 # Ejemplos de uso
 if __name__ == '__main__':
@@ -599,7 +690,7 @@ if __name__ == '__main__':
     """
     
     print("=== Ejemplo 1: Función simple ===")
-    run_food_language(code1)
+    run_food_language(code1, debug=True)
     
     # Ejemplo 2: Ciclo while
     code2 = """
@@ -611,7 +702,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 2: Ciclo while ===")
-    run_food_language(code2)
+    run_food_language(code2, debug=True)
     
     # Ejemplo 3: Listas
     code3 = """
@@ -627,7 +718,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 3: Listas ===")
-    run_food_language(code3)
+    run_food_language(code3, debug=True)
     
     # Ejemplo 4: Matrices
     code4 = """
@@ -641,7 +732,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 4: Matrices ===")
-    run_food_language(code4)
+    run_food_language(code4, debug=True)
     
     # Ejemplo 5: If/else
     code5 = """
@@ -655,7 +746,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 5: If/else ===")
-    run_food_language(code5)
+    run_food_language(code5, debug=True)
     
     # Ejemplo 6: Función con retorno
     code6 = """
@@ -669,7 +760,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 6: Función con retorno ===")
-    run_food_language(code6)
+    run_food_language(code6, debug=True)
     
     # Ejemplo 7: Ciclo for (stir)
     code7 = """
@@ -686,7 +777,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 7: Ciclo for (stir) ===")
-    run_food_language(code7)
+    run_food_language(code7, debug=True)
     
     # Ejemplo 8: Factorial recursivo
     code8 = """
@@ -702,7 +793,7 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 8: Factorial recursivo ===")
-    run_food_language(code8)
+    run_food_language(code8, debug=True)
     
     # Ejemplo 9: Switch (season)
     code9 = """
@@ -740,4 +831,4 @@ if __name__ == '__main__':
     """
     
     print("\n=== Ejemplo 9: Switch (season) ===")
-    run_food_language(code9)
+    run_food_language(code9, debug=True)

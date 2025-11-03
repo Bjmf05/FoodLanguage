@@ -7,7 +7,7 @@ import io
 import sys
 import os
 
-# Importar módulos propios
+# Importar módulos
 from code_templates import CODE_TEMPLATES, EXAMPLE_NAMES, EXAMPLE_CODES
 from ui_components import (
     create_info_window,
@@ -23,7 +23,7 @@ class FoodLanguageIDE:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("FoodLanguage IDE - Lenguaje de Programación Culinario")
+        self.root.title("FoodLanguage IDE - Lenguaje Culinario")
         self.root.geometry("1400x800")
         self.root.configure(bg='#2b2b2b')
         
@@ -40,7 +40,7 @@ class FoodLanguageIDE:
         self.setup_bindings()
         
     def setup_style(self):
-        """Configurar estilo visual de la aplicación"""
+        """Configurar estilo de la aplicación"""
         style = ttk.Style()
         style.theme_use('clam')
         
@@ -70,10 +70,10 @@ class FoodLanguageIDE:
         # Protocolo de cierre
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
     
-    # ==================== CREACIÓN DE MENÚS ====================
+    #  Creación de menú
     
     def create_menu(self):
-        """Crear menú superior"""
+        """Crear menú """
         menubar = tk.Menu(self.root, bg='#3c3c3c', fg='#e0e0e0')
         self.root.config(menu=menubar)
         
@@ -156,7 +156,7 @@ class FoodLanguageIDE:
         help_menu.add_command(label="Ejemplos", command=self.show_examples)
         help_menu.add_command(label="Acerca de", command=self.show_about)
     
-    # ==================== CREACIÓN DE LAYOUT ====================
+    # Layout principal
     
     def create_main_layout(self):
         """Crear el layout principal"""
@@ -172,7 +172,7 @@ class FoodLanguageIDE:
         left_panel = ttk.Frame(parent)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
         
-        # Título del editor
+
         editor_label = ttk.Label(left_panel, text="Editor de Código", 
                                 font=('Consolas', 12, 'bold'))
         editor_label.pack(pady=(0, 5))
@@ -202,10 +202,10 @@ class FoodLanguageIDE:
         button_frame = ttk.Frame(parent)
         button_frame.pack(pady=10)
         
-        # Botón Compilar
+        # Boton compilar
         self.compile_btn = tk.Button(
             button_frame,
-            text="🔍 Compilar",
+            text="Compilar",
             command=self.compile_code,
             bg='#0e639c',
             fg='white',
@@ -217,10 +217,10 @@ class FoodLanguageIDE:
         )
         self.compile_btn.pack(side=tk.LEFT, padx=5)
         
-        # Botón Ejecutar
+        # Boton Ejecutar
         self.run_btn = tk.Button(
             button_frame,
-            text="▶ Ejecutar",
+            text="Ejecutar",
             command=self.run_code,
             bg='#16825d',
             fg='white',
@@ -232,10 +232,10 @@ class FoodLanguageIDE:
         )
         self.run_btn.pack(side=tk.LEFT, padx=5)
         
-        # Botón Limpiar
+        # Boton Limpiar
         clear_btn = tk.Button(
             button_frame,
-            text="🗑 Limpiar",
+            text="Limpiar",
             command=self.clear_all,
             bg='#a51d2d',
             fg='white',
@@ -278,7 +278,7 @@ class FoodLanguageIDE:
         self.output_text.tag_config('success', foreground='#4ec9b0')
         self.output_text.tag_config('info', foreground='#9cdcfe')
     
-    # ==================== GESTIÓN DE ARCHIVOS ====================
+    # Archivos
     
     def new_file(self):
         """Crear nuevo archivo"""
@@ -329,7 +329,7 @@ class FoodLanguageIDE:
                     self.current_file = file_path
                     self.file_modified = False
                     self.update_title()
-                    self.write_output(f"✓ Archivo abierto: {os.path.basename(file_path)}", 'success')
+                    self.write_output(f"Archivo abierto: {os.path.basename(file_path)}", 'success')
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo abrir el archivo:\n{str(e)}")
     
@@ -342,7 +342,7 @@ class FoodLanguageIDE:
                     file.write(content)
                 self.file_modified = False
                 self.update_title()
-                self.write_output(f"✓ Archivo guardado: {os.path.basename(self.current_file)}", 'success')
+                self.write_output(f"Archivo guardado: {os.path.basename(self.current_file)}", 'success')
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")
         else:
@@ -368,7 +368,7 @@ class FoodLanguageIDE:
                 self.current_file = file_path
                 self.file_modified = False
                 self.update_title()
-                self.write_output(f"✓ Archivo guardado como: {os.path.basename(file_path)}", 'success')
+                self.write_output(f"Archivo guardado como: {os.path.basename(file_path)}", 'success')
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")
     
@@ -405,9 +405,9 @@ class FoodLanguageIDE:
                 self.save_file()
         
         self.root.destroy()
-    
-    # ==================== FUNCIONES DE INTERFAZ ====================
-    
+
+    # Interfaz de usuario
+
     def clear_code(self):
         """Limpiar el editor de código"""
         self.code_text.delete(1.0, tk.END)
@@ -433,7 +433,7 @@ class FoodLanguageIDE:
         self.output_text.see(tk.END)
         self.output_text.config(state=tk.DISABLED)
     
-    # ==================== VENTANAS DE INFORMACIÓN ====================
+    # Ventanas de información
     
     def show_keywords(self):
         """Mostrar todas las palabras reservadas"""
@@ -475,7 +475,7 @@ class FoodLanguageIDE:
         """Mostrar información sobre el IDE"""
         messagebox.showinfo("Acerca de FoodLanguage", ABOUT_TEXT)
     
-    # ==================== EJEMPLOS Y PLANTILLAS ====================
+    # Ejemplos
     
     def show_examples(self):
         """Mostrar ventana de ejemplos"""
@@ -538,7 +538,7 @@ class FoodLanguageIDE:
         if template_type in CODE_TEMPLATES:
             self.code_text.insert(tk.INSERT, CODE_TEMPLATES[template_type])
     
-    # ==================== COMPILACIÓN Y EJECUCIÓN ====================
+    # Compilación y ejecución
     
     def compile_code(self):
         """Compilar el código (verificar sintaxis)"""
@@ -546,35 +546,35 @@ class FoodLanguageIDE:
         code = self.code_text.get(1.0, tk.END).strip()
         
         if not code:
-            self.write_output("⚠️  No hay código para compilar", 'error')
+            self.write_output("No hay código para compilar", 'error')
             return
         
-        self.write_output("🔍 Compilando...\n", 'info')
+        self.write_output("Compilando...\n", 'info')
         
         try:
             # Lexer
-            self.write_output("→ Análisis léxico... ", 'info')
+            self.write_output("-> Análisis léxico... ", 'info')
             lexer = Lexer(code)
             tokens = lexer.tokenize()
-            self.write_output("✓ OK\n", 'success')
+            self.write_output("OK\n", 'success')
             
             # Parser
-            self.write_output("→ Análisis sintáctico... ", 'info')
+            self.write_output("-> Análisis sintáctico... ", 'info')
             parser = CulinaryParser(tokens)
             self.ast = parser.parse()
-            self.write_output("✓ OK\n", 'success')
-            
-            self.write_output("\n✅ Compilación exitosa\n", 'success')
+            self.write_output("OK\n", 'success')
+
+            self.write_output("\nCompilación exitosa\n", 'success')
             self.write_output("   El código está listo para ejecutarse.\n")
             
         except SyntaxError as e:
-            self.write_output("✗ ERROR\n\n", 'error')
-            self.write_output(f"❌ Error de sintaxis:\n{str(e)}\n", 'error')
+            self.write_output("ERROR\n\n", 'error')
+            self.write_output(f"Error de sintaxis:\n{str(e)}\n", 'error')
             self.ast = None
             
         except Exception as e:
-            self.write_output("✗ ERROR\n\n", 'error')
-            self.write_output(f"❌ Error inesperado:\n{str(e)}\n", 'error')
+            self.write_output("ERROR\n\n", 'error')
+            self.write_output(f"Error inesperado:\n{str(e)}\n", 'error')
             self.ast = None
     
     def run_code(self):
@@ -583,10 +583,10 @@ class FoodLanguageIDE:
         code = self.code_text.get(1.0, tk.END).strip()
         
         if not code:
-            self.write_output("⚠️  No hay código para ejecutar", 'error')
+            self.write_output("No hay código para ejecutar", 'error')
             return
-        
-        self.write_output("▶️  Ejecutando...\n", 'info')
+
+        self.write_output("Ejecutando...\n", 'info')
         self.write_output("─" * 50 + "\n\n")
         
         try:
@@ -616,15 +616,15 @@ class FoodLanguageIDE:
                 self.write_output("(sin salida)\n", 'info')
             
             self.write_output("\n" + "─" * 50 + "\n")
-            self.write_output("✅ Ejecución completada exitosamente\n", 'success')
+            self.write_output("Ejecución completada exitosamente\n", 'success')
             
         except SyntaxError as e:
             sys.stdout = old_stdout
-            self.write_output(f"\n❌ Error de sintaxis:\n{str(e)}\n", 'error')
-            
+            self.write_output(f"\nError de sintaxis:\n{str(e)}\n", 'error')
+
         except Exception as e:
             sys.stdout = old_stdout
-            self.write_output(f"\n❌ Error en tiempo de ejecución:\n{str(e)}\n", 'error')
+            self.write_output(f"\nError en tiempo de ejecución:\n{str(e)}\n", 'error')
             import traceback
             self.write_output("\nDetalles técnicos:\n", 'info')
             self.write_output(traceback.format_exc(), 'error')

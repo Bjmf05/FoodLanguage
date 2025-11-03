@@ -1,9 +1,4 @@
-"""
-code_templates.py
-Contiene todas las plantillas de código y ejemplos para FoodLanguage IDE
-"""
-
-# ==================== PLANTILLAS DE CÓDIGO ====================
+#  PLANTILLAS PARA FOODLANGUAGE
 
 CODE_TEMPLATES = {
     'if': '''if_has (condicion) {
@@ -37,7 +32,7 @@ CODE_TEMPLATES = {
     'matrix': '''menu matriz == [[1, 2], [3, 4]]'''
 }
 
-# ==================== EJEMPLOS DE CÓDIGO ====================
+# EJEMPLOS
 
 EXAMPLE_NAMES = [
     "1. Hola Mundo",
@@ -58,7 +53,7 @@ EXAMPLE_NAMES = [
 
 EXAMPLE_CODES = [
     # 0. Hola Mundo
-    '''taste("¡Hola Mundo desde FoodLanguage!")''',
+    '''taste("Hola Mundo desde FoodLanguage")''',
     
     # 1. Variables y Tipos
     '''quantity edad == 25
@@ -102,10 +97,10 @@ if_has (edad >= 18) {
 
 taste("Contando del 1 al 5:")
 cook_while (contador <= 5) {
-    taste("  Número:", contador)
+    taste("  Numero:", contador)
     contador == contador ++ 1
 }
-taste("¡Terminado!")''',
+taste("Terminado")''',
     
     # 5. Bucle For
     '''taste("Tabla del 7:")
@@ -138,9 +133,8 @@ taste("Centro modificado:", matriz[1][1])''',
     
     # 8. Función Simple
     '''recipe saludar(ingredient nombre) {
-    taste("¡Hola", nombre, "!")
+    taste("Hola", nombre, "!")
     taste("Bienvenido a FoodLanguage")
-    serve flavorless
 }
 
 saludar("Chef")
@@ -160,7 +154,7 @@ quantity total == sumar(15, 25)
 taste("15 + 25 =", total)
 
 quantity producto == multiplicar(6, 7)
-taste("6 × 7 =", producto)''',
+taste("6 x 7 =", producto)''',
     
     # 10. Factorial Recursivo
     '''recipe factorial(quantity n) {
@@ -223,15 +217,15 @@ if_has (edad >= 18) {
 
 recipe evaluarPromedio(portion prom) {
     if_has (prom >= 70) {
-        taste("¡APROBADO! 🎉")
+        taste("APROBADO")
         serve ready
     } otherwise {
-        taste("Reprobado 😢")
+        taste("Reprobado")
         serve raw
     }
 }
 
-taste("=== SISTEMA DE CALIFICACIONES ===")
+taste("SISTEMA DE CALIFICACIONES")
 menu calificaciones == [85, 90, 78]
 
 taste("Calificaciones:", calificaciones)
