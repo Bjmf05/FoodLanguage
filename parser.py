@@ -24,10 +24,13 @@ class CulinaryParser:
                 self.advance()
                 return True
             else:
+                line = self.current_token.line if self.current_token else "?"
                 raise SyntaxError(
-                    f"Se esperaba {token_type} con valor '{token_value}', pero se encontró {self.current_token}")
+                    f"Línea {line}: Se esperaba {token_type} con valor '{token_value}', pero se encontró '{self.current_token.value}'")
         else:
-            raise SyntaxError(f"Se esperaba {token_type}, pero se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            value = self.current_token.value if self.current_token else "fin de archivo"
+            raise SyntaxError(f"Línea {line}: Se esperaba {token_type}, pero se encontró '{value}'")
 
     def parse(self):
         self.tree = []
@@ -72,13 +75,15 @@ class CulinaryParser:
             elif (self.current_token.type in ['PLUS', 'MINUS'] and 
                   self.current_token.value in ['++', '--']):
                 operator = self.current_token.value
+                line = self.current_token.line
                 raise SyntaxError(
-                    f"Operador prefijo '{operator}' no está permitido. "
+                    f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                     f"Use la forma postfija (ej: variable{operator}) o "
                     f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
                 )
             else:
-                raise SyntaxError(f"Token inesperado {self.current_token.type}:{self.current_token.value}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Token inesperado {self.current_token.type}:{self.current_token.value}")
         return self.tree
 
     def parse_recipe(self):
@@ -91,7 +96,8 @@ class CulinaryParser:
             self.recipe_name = recipe_name
             self.advance()
         else:
-            raise SyntaxError(f"Se esperaba un nombre para la recipe, se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba un nombre para la recipe, se encontró {self.current_token}")
         
         self.expect('DELIMETER', '(')
         parameters = self.parse_parameters()
@@ -118,7 +124,8 @@ class CulinaryParser:
                 param_type = self.current_token.value
                 self.advance()
             else:
-                raise SyntaxError(f"Se esperaba tipo de parámetro, se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba tipo de parámetro, se encontró {self.current_token}")
             
             # Nombre del parámetro
             if self.current_token.type == 'IDENTIFIER':
@@ -126,7 +133,8 @@ class CulinaryParser:
                 self.advance()
                 parameters.append((param_type, param_name))
             else:
-                raise SyntaxError(f"Se esperaba nombre de parámetro, se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba nombre de parámetro, se encontró {self.current_token}")
             
             if (self.current_token.type == 'DELIMETER' and 
                 self.current_token.value == ')'):
@@ -134,7 +142,8 @@ class CulinaryParser:
             elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
                 self.advance()
             else:
-                raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba ',' o ')', se encontró {self.current_token}")
         return parameters
 
     def parse_recipe_body(self):
@@ -194,13 +203,15 @@ class CulinaryParser:
         elif (self.current_token.type in ['PLUS', 'MINUS'] and 
               self.current_token.value in ['++', '--']):
             operator = self.current_token.value
+            line = self.current_token.line
             raise SyntaxError(
-                f"Operador prefijo '{operator}' no está permitido. "
+                f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                 f"Use la forma postfija (ej: variable{operator}) o "
                 f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
             )
         else:
-            raise SyntaxError(f"Declaración inesperada: {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Declaración inesperada: {self.current_token}")
 
     def parse_var_declaration(self):
         var_type = self.current_token.value
@@ -218,7 +229,8 @@ class CulinaryParser:
             else:
                 return ('var_declaration', var_type, var_name)
         else:
-            raise SyntaxError(f"Se esperaba nombre de variable, se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba nombre de variable, se encontró {self.current_token}")
 
     def parse_assignment_or_call(self):
         identifier = self.current_token.value
@@ -275,7 +287,8 @@ class CulinaryParser:
             else:
                 return ('inc_dec_postfix', identifier, operator)
         else:
-            raise SyntaxError(f"Se esperaba '==', '(', '[', '++' o '--', se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba '==', '(', '[', '++' o '--', se encontró {self.current_token}")
 
     def parse_assignment(self, var_name):
         self.expect('ASSIGN', '==')
@@ -305,7 +318,8 @@ class CulinaryParser:
             elif self.current_token.type == 'DELIMETER' and self.current_token.value == ',':
                 self.advance()
             else:
-                raise SyntaxError(f"Se esperaba ',' o ')', se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba ',' o ')', se encontró {self.current_token}")
         return arguments
 
     def parse_expression(self):      
@@ -376,10 +390,11 @@ class CulinaryParser:
         if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
             self.current_token.value in ['++', '--']):
             operator = self.current_token.value
+            line = self.current_token.line
             raise SyntaxError(
-                f"Operador prefijo '{operator}' no está permitido. "
+                f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                 f"Use la forma postfija (ej: variable{operator}) o "
-                f"la forma explícita (ej: variable == variable {'++' if operator == '++' else '--'} 1)"
+                f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
             )
         
         # Literal de lista: [1, 2, 3]
@@ -456,7 +471,8 @@ class CulinaryParser:
             return expr
         
         else:
-            raise SyntaxError(f"Expresión inválida: {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Expresión inválida: {self.current_token}")
 
     def parse_print(self):
         self.expect('PRINT', 'taste')
@@ -480,7 +496,8 @@ class CulinaryParser:
             self.expect('DELIMETER', ')')
             return ('input', var_name, prompt if 'prompt' in locals() else None)
         else:
-            raise SyntaxError(f"Se esperaba nombre de variable para input, se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba nombre de variable para input, se encontró {self.current_token}")
 
     def parse_if(self):
         self.advance()  # Consume 'if' o 'if_has'
@@ -528,13 +545,15 @@ class CulinaryParser:
             var_type = self.current_token.value
             self.advance()
         else:
-            raise SyntaxError(f"Se esperaba tipo de variable en for, se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba tipo de variable en for, se encontró {self.current_token}")
         
         if self.current_token.type == 'IDENTIFIER':
             var_name = self.current_token.value
             self.advance()
         else:
-            raise SyntaxError(f"Se esperaba nombre de variable en for, se encontró {self.current_token}")
+            line = self.current_token.line if self.current_token else "?"
+            raise SyntaxError(f"Línea {line}: Se esperaba nombre de variable en for, se encontró {self.current_token}")
         
         self.expect('ASSIGN', '==')
         start_value = self.parse_expression()
@@ -623,7 +642,8 @@ class CulinaryParser:
                 
                 default_case = default_body
             else:
-                raise SyntaxError(f"Se esperaba 'with' o 'default_flavor' en switch, se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba 'with' o 'default_flavor' en switch, se encontró {self.current_token}")
         
         self.expect('DELIMETER', '}')
         
@@ -671,7 +691,8 @@ class CulinaryParser:
                   self.current_token.value == ','):
                 self.advance()
             else:
-                raise SyntaxError(f"Se esperaba ',' o ']' en lista, se encontró {self.current_token}")
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: Se esperaba ',' o ']' en lista, se encontró {self.current_token}")
         
         return ('list', elements)
 

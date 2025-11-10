@@ -684,7 +684,24 @@ class FoodLanguageIDE:
             
         except SyntaxError as e:
             self.write_output("ERROR\n\n", 'error')
-            self.write_output(f"Error de sintaxis:\n{str(e)}\n", 'error')
+            error_msg = str(e)
+            # Resaltar el número de línea si existe
+            if "Línea" in error_msg:
+
+                self.write_output("   ERROR DE SINTAXIS                   \n", 'error')
+                self.write_output(f"\n{error_msg}\n\n", 'error')
+            else:
+                self.write_output(f"Error de sintaxis:\n{error_msg}\n", 'error')
+            self.ast = None
+            
+        except ValueError as e:
+            self.write_output("ERROR\n\n", 'error')
+            error_msg = str(e)
+            if "Línea" in error_msg:
+                self.write_output("   ERROR LÉXICO                        \n", 'error')
+                self.write_output(f"\n{error_msg}\n\n", 'error')
+            else:
+                self.write_output(f"Error léxico:\n{error_msg}\n", 'error')
             self.ast = None
             
         except Exception as e:
@@ -735,11 +752,22 @@ class FoodLanguageIDE:
             
         except SyntaxError as e:
             sys.stdout = old_stdout
-            self.write_output(f"\nError de sintaxis:\n{str(e)}\n", 'error')
+            error_msg = str(e)
+            if "Línea" in error_msg:
+                self.write_output("\n   ERROR DE SINTAXIS                   \n", 'error')
+                self.write_output(f"\n{error_msg}\n\n", 'error')
+            else:
+                self.write_output(f"\nError de sintaxis:\n{error_msg}\n", 'error')
+
+        except (TypeError, ValueError, NameError, RuntimeError) as e:
+            sys.stdout = old_stdout
+            error_msg = str(e)
+            self.write_output("\n   ERROR EN TIEMPO DE EJECUCIÓN        \n", 'error')
+            self.write_output(f"\n{error_msg}\n\n", 'error')
 
         except Exception as e:
             sys.stdout = old_stdout
-            self.write_output(f"\nError en tiempo de ejecución:\n{str(e)}\n", 'error')
+            self.write_output(f"\nError inesperado:\n{str(e)}\n", 'error')
             import traceback
             self.write_output("\nDetalles técnicos:\n", 'info')
             self.write_output(traceback.format_exc(), 'error')

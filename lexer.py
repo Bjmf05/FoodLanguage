@@ -19,7 +19,7 @@ class Lexer:
                         line_pos += len(value)
                         break
                 else:
-                    raise ValueError(f"Unexpected character '{line[line_pos]}' on the line {line_number}")
+                    raise ValueError(f"Línea {line_number}: Carácter inesperado '{line[line_pos]}'")
         return tokens
     
 if __name__ == '__main__':
