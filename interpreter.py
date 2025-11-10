@@ -400,6 +400,9 @@ class CulinaryInterpreter:
             # Ejecutar incremento
             if increment[0] == 'assignment':
                 self.eval_node(increment)
+            elif increment[0] == 'inc_dec_postfix':
+                # Manejar i++ o i-- directamente
+                self.eval_inc_dec_postfix(increment)
             else:
                 self.eval_expression(increment)
         
@@ -793,7 +796,7 @@ if __name__ == '__main__':
     }
     
     taste("Tabla del 3:")
-    stir (quantity j == 1, j <= 10, j == j ++ 1) {
+    stir (quantity j == 1, j <= 10, j++) {
         quantity resultado == 3 ** j
         taste("  3 x", j, "=", resultado)
     }

@@ -563,13 +563,19 @@ class CulinaryParser:
         condition = self.parse_expression()
         self.expect('DELIMETER', ',')
         
-        # Parse increment - puede ser una expresión o una asignación
         if self.current_token.type == 'IDENTIFIER':
             inc_var = self.current_token.value
             self.advance()
             
-            # Verificar si es una asignación (var == expr) o solo una expresión
-            if self.current_token.type == 'ASSIGN' and self.current_token.value == '==':
+            # Verificar si es postfix (i++ o i--)
+            if (self.current_token and self.current_token.type in ['PLUS', 'MINUS'] and
+                self.current_token.value in ['++', '--']):
+                operator = self.current_token.value
+                self.advance()
+                # Crear nodo de incremento/decremento postfix
+                increment = ('inc_dec_postfix', inc_var, operator)
+            # Verificar si es una asignación (var == expr)
+            elif self.current_token.type == 'ASSIGN' and self.current_token.value == '==':
                 self.advance()
                 inc_value = self.parse_expression()
                 increment = ('assignment', inc_var, inc_value)
@@ -728,7 +734,7 @@ if __name__ == '__main__':
         """,
         # Prueba de for
         """
-        stir (quantity i == 0, i < 10, i == i ++ 1) {
+        stir (quantity i == 0, i < 10, i++) {
             taste(i)
         }
         """,
