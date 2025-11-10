@@ -38,6 +38,8 @@ class FoodLanguageIDE:
         self.ast = None
         self.current_file = None
         self.file_modified = False
+        self.compilation_successful = False
+        self.last_compiled_code = ""
         
         # Configurar la interfaz
         self.setup_style()
@@ -662,6 +664,7 @@ class FoodLanguageIDE:
         
         if not code:
             self.write_output("No hay código para compilar", 'error')
+            self.compilation_successful = False
             return
         
         self.write_output("Compilando...\n", 'info')
@@ -679,8 +682,12 @@ class FoodLanguageIDE:
             self.ast = parser.parse()
             self.write_output("OK\n", 'success')
 
-            self.write_output("\nCompilación exitosa\n", 'success')
+            self.write_output("\nCompilación exitosa \n", 'success')
             self.write_output("   El código está listo para ejecutarse.\n")
+            
+            # Marcar compilación exitosa
+            self.compilation_successful = True
+            self.last_compiled_code = code
             
         except SyntaxError as e:
             self.write_output("ERROR\n\n", 'error')
@@ -693,6 +700,7 @@ class FoodLanguageIDE:
             else:
                 self.write_output(f"Error de sintaxis:\n{error_msg}\n", 'error')
             self.ast = None
+            self.compilation_successful = False
             
         except ValueError as e:
             self.write_output("ERROR\n\n", 'error')
@@ -703,11 +711,13 @@ class FoodLanguageIDE:
             else:
                 self.write_output(f"Error léxico:\n{error_msg}\n", 'error')
             self.ast = None
+            self.compilation_successful = False
             
         except Exception as e:
             self.write_output("ERROR\n\n", 'error')
             self.write_output(f"Error inesperado:\n{str(e)}\n", 'error')
             self.ast = None
+            self.compilation_successful = False
     
     def run_code(self):
         """Ejecutar el código"""
@@ -717,6 +727,71 @@ class FoodLanguageIDE:
         if not code:
             self.write_output("No hay código para ejecutar", 'error')
             return
+        
+        # Verificar si el código ha sido modificado desde la última compilación
+        if code != self.last_compiled_code or not self.compilation_successful:
+            self.write_output("El código no ha sido compilado o tiene errores.\n", 'error')
+            self.write_output("Compilando primero...\n\n", 'info')
+            self.write_output("─" * 50 + "\n\n")
+            
+            # Intentar compilar
+            try:
+                # Lexer
+                self.write_output("-> Análisis léxico... ", 'info')
+                lexer = Lexer(code)
+                tokens = lexer.tokenize()
+                self.write_output("OK\n", 'success')
+                
+                # Parser
+                self.write_output("-> Análisis sintáctico... ", 'info')
+                parser = CulinaryParser(tokens)
+                self.ast = parser.parse()
+                self.write_output("OK\n", 'success')
+                
+                self.write_output("\nCompilación exitosa \n", 'success')
+                self.write_output("─" * 50 + "\n\n")
+                
+                self.compilation_successful = True
+                self.last_compiled_code = code
+                
+            except SyntaxError as e:
+                self.write_output("ERROR\n\n", 'error')
+                error_msg = str(e)
+                if "Línea" in error_msg:
+                    self.write_output("   ERROR DE SINTAXIS                   \n", 'error')
+                    self.write_output(f"\n{error_msg}\n\n", 'error')
+                else:
+                    self.write_output(f"Error de sintaxis:\n{error_msg}\n", 'error')
+                
+                self.write_output("\n" + "─" * 50 + "\n")
+                self.write_output("✗ No se puede ejecutar: hay errores de compilación\n", 'error')
+                self.ast = None
+                self.compilation_successful = False
+                return
+                
+            except ValueError as e:
+                self.write_output("ERROR\n\n", 'error')
+                error_msg = str(e)
+                if "Línea" in error_msg:
+                    self.write_output("   ERROR LÉXICO                        \n", 'error')
+                    self.write_output(f"\n{error_msg}\n\n", 'error')
+                else:
+                    self.write_output(f"Error léxico:\n{error_msg}\n", 'error')
+                
+                self.write_output("\n" + "─" * 50 + "\n")
+                self.write_output("✗ No se puede ejecutar: hay errores de compilación\n", 'error')
+                self.ast = None
+                self.compilation_successful = False
+                return
+                
+            except Exception as e:
+                self.write_output("ERROR\n\n", 'error')
+                self.write_output(f"Error inesperado:\n{str(e)}\n", 'error')
+                self.write_output("\n" + "─" * 50 + "\n")
+                self.write_output("✗ No se puede ejecutar: hay errores de compilación\n", 'error')
+                self.ast = None
+                self.compilation_successful = False
+                return
 
         self.write_output("Ejecutando...\n", 'info')
         self.write_output("─" * 50 + "\n\n")
