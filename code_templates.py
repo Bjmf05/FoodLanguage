@@ -9,7 +9,7 @@ CODE_TEMPLATES = {
     'while': '''cook_while (condicion) {
     // código del bucle
 }''',
-    'for': '''stir (quantity i == 0, i < 10, i == i ++ 1) {
+    'for': '''stir (quantity i == 0, i < 10, i++) {
     // código del bucle
 }''',
     'switch': '''season (variable) {
@@ -110,7 +110,7 @@ taste("Terminado")''',
     
     # 5. Bucle For
     '''taste("Tabla del 7:")
-stir (quantity i == 1, i <= 10, i == i ++ 1) {
+stir (quantity i == 1, i <= 10, i++) {
     quantity resultado == 7 ** i
     taste("  7 x", i, "=", resultado)
 }''',
