@@ -49,7 +49,8 @@ class CulinaryParser:
                 self.tree.append(self.parse_if())
             elif (self.current_token.type == 'ELSE' and 
                   self.current_token.value.lower() == 'otherwise'):
-                self.tree.append(self.parse_else())
+                line = self.current_token.line if self.current_token else "?"
+                raise SyntaxError(f"Línea {line}: 'otherwise' sin un bloque 'if' previo")
             elif (self.current_token.type == 'WHILE' and 
                   self.current_token.value.lower() == 'cook_while'):
                 self.tree.append(self.parse_while())
@@ -79,7 +80,7 @@ class CulinaryParser:
                 raise SyntaxError(
                     f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                     f"Use la forma postfija (ej: variable{operator}) o "
-                    f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
+                    f"la forma explícita (ej: variable == variable {'++ 1' if operator == '++' else '-- 1'})"
                 )
             else:
                 line = self.current_token.line if self.current_token else "?"
@@ -207,7 +208,7 @@ class CulinaryParser:
             raise SyntaxError(
                 f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                 f"Use la forma postfija (ej: variable{operator}) o "
-                f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
+                f"la forma explícita (ej: variable == variable {'++ 1' if operator == '++' else '-- 1'})"
             )
         else:
             line = self.current_token.line if self.current_token else "?"
@@ -394,7 +395,7 @@ class CulinaryParser:
             raise SyntaxError(
                 f"Línea {line}: Operador prefijo '{operator}' no está permitido. "
                 f"Use la forma postfija (ej: variable{operator}) o "
-                f"la forma explícita (ej: variable == variable {'+ 1' if operator == '++' else '- 1'})"
+                f"la forma explícita (ej: variable == variable {'++ 1' if operator == '++' else '-- 1'})"
             )
         
         # Literal de lista: [1, 2, 3]
@@ -520,11 +521,8 @@ class CulinaryParser:
         return ('if', condition, if_body, else_body)
 
     def parse_else(self):
-        self.expect('ELSE', 'otherwise')
-        self.expect('DELIMETER', '{')
-        else_body = self.parse_recipe_body()
-        self.expect('DELIMETER', '}')
-        return ('else', else_body)
+        line = self.current_token.line if self.current_token else "?"
+        raise SyntaxError(f"Línea {line}: 'otherwise' sin un bloque 'if' previo")
 
     def parse_while(self):
         self.expect('WHILE', 'cook_while')
@@ -657,20 +655,35 @@ class CulinaryParser:
 
     def parse_return(self):
         self.expect('RETURN', 'serve')
-        if (self.current_token.type == 'DELIMETER' and 
-            self.current_token.value == ';'):
+        if self.current_token is None:
+            return ('return', None)
+        elif self.current_token.type == 'DELIMETER' and self.current_token.value == ';':
             self.advance()
+            return ('return', None)
+        elif self.current_token.type == 'DELIMETER' and self.current_token.value == '}':
+            return ('return', None)
+        elif self.current_token.type in [
+            'PRINT', 'INPUT', 'FUNCTION', 'IF', 'ELSE', 'WHILE',
+            'FOR', 'SWITCH', 'RETURN', 'BREAK', 'CONTINUE',
+            'INT', 'FLOAT', 'STRING', 'LIST'
+        ]:
             return ('return', None)
         else:
             value = self.parse_expression()
+            if self.current_token and self.current_token.type == 'DELIMETER' and self.current_token.value == ';':
+                self.advance()
             return ('return', value)
 
     def parse_break(self):
         self.expect('BREAK', 'stop_stirring')
+        if self.current_token and self.current_token.type == 'DELIMETER' and self.current_token.value == ';':
+            self.advance()
         return ('break',)
 
     def parse_continue(self):
         self.expect('CONTINUE', 'keep_stirring')
+        if self.current_token and self.current_token.type == 'DELIMETER' and self.current_token.value == ';':
+            self.advance()
         return ('continue',)
     
     def parse_list_literal(self):

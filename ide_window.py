@@ -22,7 +22,7 @@ def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
     except AttributeError:
-        base_path = os.path.abspath(".")
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 class FoodLanguageIDE:
     """Clase principal del IDE de FoodLanguage"""
@@ -48,9 +48,13 @@ class FoodLanguageIDE:
         self.setup_bindings()
         
         # Ícono de la ventana
-        icon_path = resource_path('foodIcon.png')  # Ruta del ícono
-        icon_image = tk.PhotoImage(file=icon_path)
-        self.root.iconphoto(False, icon_image)
+        try:
+            icon_path = resource_path('foodIcon.png')  # Ruta del ícono
+            if os.path.exists(icon_path):
+                icon_image = tk.PhotoImage(file=icon_path)
+                self.root.iconphoto(False, icon_image)
+        except Exception:
+            pass
     
     def setup_style(self):
         """Configurar estilo de la aplicación"""
@@ -466,6 +470,7 @@ class FoodLanguageIDE:
         if self.code_text.edit_modified():
             self.file_modified = True
             self.update_title()
+            self._update_line_numbers()
             self.code_text.edit_modified(False)
     
     def update_title(self):
@@ -528,6 +533,7 @@ class FoodLanguageIDE:
     def clear_code(self):
         """Limpiar el editor de código"""
         self.code_text.delete(1.0, tk.END)
+        self._update_line_numbers()
     
     def clear_all(self):
         """Limpiar código y output"""
@@ -805,28 +811,17 @@ class FoodLanguageIDE:
             parser = CulinaryParser(tokens)
             ast = parser.parse()
             
-            # Capturar stdout
-            old_stdout = sys.stdout
-            sys.stdout = io.StringIO()
-            
-            # Interpreter con callback para input
-            interpreter = CulinaryInterpreter(input_callback=self.console_input)
+            # Interpreter con callbacks para input y output en tiempo real
+            interpreter = CulinaryInterpreter(
+                input_callback=self.console_input,
+                output_callback=self.write_output
+            )
             interpreter.interpret(ast)
-            
-            # Obtener output
-            output = sys.stdout.getvalue()
-            sys.stdout = old_stdout
-            
-            if output:
-                self.write_output(output)
-            else:
-                self.write_output("(sin salida)\n", 'info')
             
             self.write_output("\n" + "─" * 50 + "\n")
             self.write_output("Ejecución completada exitosamente\n", 'success')
             
         except SyntaxError as e:
-            sys.stdout = old_stdout
             error_msg = str(e)
             if "Línea" in error_msg:
                 self.write_output("\n   ERROR DE SINTAXIS                   \n", 'error')
@@ -835,13 +830,11 @@ class FoodLanguageIDE:
                 self.write_output(f"\nError de sintaxis:\n{error_msg}\n", 'error')
 
         except (TypeError, ValueError, NameError, RuntimeError) as e:
-            sys.stdout = old_stdout
             error_msg = str(e)
             self.write_output("\n   ERROR EN TIEMPO DE EJECUCIÓN        \n", 'error')
             self.write_output(f"\n{error_msg}\n\n", 'error')
 
         except Exception as e:
-            sys.stdout = old_stdout
             self.write_output(f"\nError inesperado:\n{str(e)}\n", 'error')
             import traceback
             self.write_output("\nDetalles técnicos:\n", 'info')
@@ -854,6 +847,7 @@ class FoodLanguageIDE:
         # Resetear variables
         self.input_result = None
         self.waiting_for_input = True
+        done_var = tk.StringVar()
         
         # Configurar el input_entry
         self.input_label.config(text="Ingresa valor: ")
@@ -871,32 +865,15 @@ class FoodLanguageIDE:
                 self.input_result = self.input_entry.get()
                 self.waiting_for_input = False
                 
-                
                 self.write_output(self.input_result + "\n", 'input')
-                
-            
                 self.input_frame.pack_forget()
-                
-                # Unbind el evento
                 self.input_entry.unbind('<Return>')
+                done_var.set("done")
         
         self.input_entry.bind('<Return>', on_enter)
         
         # Esperar a que el usuario ingrese algo
-        self.root.wait_variable(self._create_wait_variable())
+        self.root.wait_variable(done_var)
         
         return self.input_result if self.input_result is not None else ""
-    
-    def _create_wait_variable(self):
-        """Crear una variable para wait_variable que se actualiza cuando se completa el input"""
-        var = tk.StringVar()
-        
-        def check_input():
-            if not self.waiting_for_input:
-                var.set("done")
-            else:
-                self.root.after(100, check_input)
-        
-        check_input()
-        return var
     

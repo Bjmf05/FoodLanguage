@@ -174,17 +174,17 @@ ARITHMETIC_CONTENT = """
  DIVISIÓN (\\\\):
    quantity resultado == 20 \\\\ 4   -> 5
 
- INCREMENTO/DECREMENTO:
-   • Prefijo:  ++x  o  --x
-   • Postfijo: x++  o  x--
-   
-   Ejemplo:
-   quantity i == 0
-   i++              -> i ahora es 1
-   ++i              -> i ahora es 2
+  INCREMENTO/DECREMENTO:
+    • Postfijo: x++  o  x--
+    • Explícito: x == x ++ 1  o  x == x -- 1
+    
+    Ejemplo:
+    quantity i == 0
+    i++              -> i ahora es 1
+    i == i ++ 2      -> i ahora es 3
 
- NOTA: Los operadores usan símbolos dobles para
-   diferenciarlos del incremento/decremento.
+  NOTA: Los operadores usan símbolos dobles para
+    diferenciarlos del incremento/decremento.
 """
 
 COMPARISON_CONTENT = """

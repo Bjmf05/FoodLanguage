@@ -79,7 +79,7 @@ quantity b == 3
 quantity suma == a ++ b
 quantity resta == a -- b
 quantity multiplicacion == a ** b
-quantity division == a \\\\ b
+portion division == a \\\\ b
 
 taste("Suma:", suma)
 taste("Resta:", resta)
@@ -225,7 +225,7 @@ add("Ingrese el primer número: ", num1)
 add("Ingrese el segundo número: ", num2)
 
 taste("Resultados:")
-taste("─────────────────────────")
+taste("-------------------------")
 
 quantity suma == num1 ++ num2
 taste("Suma:", num1, "++", num2, "=", suma)
@@ -290,7 +290,7 @@ add("Email: ", email)
 add("Altura (metros): ", altura)
 
 taste("DATOS REGISTRADOS")
-taste("─────────────────────────────")
+taste("-----------------------------")
 taste("Nombre completo:", nombre, apellido)
 taste("Edad:", edad, "años")
 taste("Email:", email)
@@ -312,7 +312,7 @@ if_has (altura >= 1.80) {
     }
 }
 
-taste("─────────────────────────────")
+taste("-----------------------------")
 taste("Registro completado exitosamente!")''',
     
     # 16. Programa Completo

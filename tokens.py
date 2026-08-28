@@ -47,7 +47,6 @@ token_patterns = [
     # Delimitadores y otros
     ('DELIMETER', r'[(),:{}\[\];]'),
     ('WHITESPACE', r'\s+'),
-    ('UNKNOWN', r'.'),
 ]
 
 tokens_compiled = {name:re.compile(pattern) for name, pattern in token_patterns}

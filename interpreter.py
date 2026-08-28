@@ -2,7 +2,7 @@ from lexer import Lexer
 from parser import CulinaryParser
 
 class CulinaryInterpreter:
-    def __init__(self, input_callback=None):
+    def __init__(self, input_callback=None, output_callback=None):
         self.global_scope = {}
         self.local_scopes = [{}]
         self.variable_types = {}  # Almacena el tipo declarado de cada variable
@@ -12,6 +12,7 @@ class CulinaryInterpreter:
         self.break_flag = False
         self.continue_flag = False
         self.input_callback = input_callback  # Callback para manejar input en GUI
+        self.output_callback = output_callback  # Callback para manejar output en GUI
     
     def get_current_scope(self):
         """Retorna el scope actual (local si existe, sino global)"""
@@ -43,8 +44,8 @@ class CulinaryInterpreter:
         """Valida que el valor sea compatible con el tipo declarado de la variable"""
         declared_type = self.get_variable_type(var_name)
         
-        # Si no hay tipo declarado, permitir cualquier valor (tipado dinámico)
-        if declared_type is None:
+        # Si no hay tipo declarado o el valor es nulo (flavorless), permitir
+        if declared_type is None or value is None:
             return True
         
         # Mapeo de tipos FoodLanguage a tipos Python
@@ -61,7 +62,8 @@ class CulinaryInterpreter:
             float: 'portion', 
             str: 'ingredient',
             list: 'menu',
-            bool: 'quantity'  # Los booleanos se consideran quantity
+            bool: 'quantity',  # Los booleanos se consideran quantity
+            type(None): 'flavorless'
         }
         
         expected_python_type = type_mapping.get(declared_type.lower())
@@ -75,7 +77,7 @@ class CulinaryInterpreter:
         
         # Validación especial para números
         if expected_python_type == int:
-            if not isinstance(value, (int, bool)) or isinstance(value, bool):
+            if not isinstance(value, (int, bool)):
                 raise TypeError(
                     f"No se puede asignar valor de tipo '{actual_food_type}' "
                     f"a variable '{var_name}' de tipo '{declared_type}' (se esperaba quantity)"
@@ -282,7 +284,11 @@ class CulinaryInterpreter:
         for arg in arguments:
             value = self.eval_expression(arg)
             output.append(str(value))
-        print(' '.join(output))
+        line_str = ' '.join(output)
+        if self.output_callback:
+            self.output_callback(line_str + '\n')
+        else:
+            print(line_str)
         return None
     
     def eval_input(self, node):
@@ -377,8 +383,12 @@ class CulinaryInterpreter:
         """Evalúa un ciclo for"""
         _, var_type, var_name, start_value, condition, increment, body = node
         
+        # Guardar y validar el tipo de la variable del for
+        self.set_variable_type(var_name, var_type)
+        
         # Inicializar variable del for
         start = self.eval_expression(start_value)
+        self.validate_type(var_name, start)
         self.set_variable(var_name, start)
         
         # Ejecutar el ciclo
@@ -607,6 +617,8 @@ class CulinaryInterpreter:
         elif operator == '\\\\':
             if right_val == 0:
                 raise ZeroDivisionError("División por cero")
+            if isinstance(left_val, int) and isinstance(right_val, int) and left_val % right_val == 0:
+                return left_val // right_val
             return left_val / right_val
         else:
             raise RuntimeError(f"Operador binario desconocido: {operator}")

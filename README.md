@@ -34,8 +34,8 @@ Fue desarrollado como proyecto académico para demostrar conceptos de compilador
 ## Uso
 
 ```bash
-git clone https://github.com/Bjmf05/FoodLanguage.git
-cd FoodLanguage
+git clone https://github.com/Bjmf05/FoodLenguage.git
+cd FoodLenguage
 python main.py
 ```
 
